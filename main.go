@@ -72,7 +72,7 @@ func parseLvl() {
 			varToAssign := boxCoordinates
 			for j := range msg {
 				cor[1] = j
-				ch := byte(msg[j])
+				ch := msg[j]
 				switch {
 				case ch == config.FreeSpaceSymbol:
 					continue
