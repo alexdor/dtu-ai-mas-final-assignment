@@ -3,9 +3,9 @@ package parser
 import (
 	"strings"
 
-	"github.com/alexdor/dtu-ai-mas-final-assigment/communication"
-	"github.com/alexdor/dtu-ai-mas-final-assigment/config"
-	"github.com/alexdor/dtu-ai-mas-final-assigment/types"
+	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
+	"github.com/alexdor/dtu-ai-mas-final-assignment/config"
+	"github.com/alexdor/dtu-ai-mas-final-assignment/types"
 )
 
 func ParseLevel() (types.LevelInfo, error) {
