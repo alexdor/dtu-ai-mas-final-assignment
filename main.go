@@ -51,66 +51,68 @@ func parseLvl() {
 			continue
 		}
 
-		// Parse
-		switch mode {
-		case "colors":
-			colors := strings.Split(msg, ":")
+		parseMode(mode, msg, row)
+		row++
+	}
+}
 
-			for _, letter := range strings.Split(colors[1], ",") {
-				char := strings.TrimSpace(letter)[0]
-				// Check if the char is a number
-				if '0' <= char && char <= '9' {
-					agentColor[char] = colors[0]
-					continue
-				}
-				boxColor[char] = colors[0]
+func parseMode(mode, msg string, row int) {
+	switch mode {
+	case "colors":
+		colors := strings.Split(msg, ":")
+
+		for _, letter := range strings.Split(colors[1], ",") {
+			char := strings.TrimSpace(letter)[0]
+			// Check if the char is a number
+			if '0' <= char && char <= '9' {
+				agentColor[char] = colors[0]
+				continue
 			}
-
-		case "initial":
-			cor := [2]int{row, 0}
-			communication.Log(row)
-			varToAssign := boxCoordinates
-			for j := range msg {
-				cor[1] = j
-				ch := msg[j]
-				switch {
-				case ch == config.FreeSpaceSymbol:
-					continue
-
-				case ch == config.WallsSymbol:
-					walls[cor] = struct{}{}
-
-				case '0' <= ch && ch <= '9':
-					varToAssign = agentCoordinates
-					fallthrough
-
-				default:
-					if _, ok := varToAssign[ch]; ok {
-						varToAssign[ch][cor] = struct{}{}
-						continue
-					}
-					varToAssign[ch] = coordinatesLookup{cor: struct{}{}}
-				}
-			}
-
-		case "goal":
-			for j := range msg {
-				ch := msg[j]
-				if ch != config.FreeSpaceSymbol && ch != config.WallsSymbol {
-					cor := [2]int{row, j}
-					if _, ok := goalCoordinates[ch]; ok {
-						goalCoordinates[ch][cor] = struct{}{}
-						continue
-					}
-					goalCoordinates[ch] = coordinatesLookup{cor: struct{}{}}
-				}
-			}
-
-		default:
-			lvlInfo[mode] = msg
+			boxColor[char] = colors[0]
 		}
 
-		row++
+	case "initial":
+		cor := [2]int{row, 0}
+		communication.Log(row)
+		varToAssign := boxCoordinates
+		for j := range msg {
+			cor[1] = j
+			ch := msg[j]
+			switch {
+			case ch == config.FreeSpaceSymbol:
+				continue
+
+			case ch == config.WallsSymbol:
+				walls[cor] = struct{}{}
+
+			case '0' <= ch && ch <= '9':
+				varToAssign = agentCoordinates
+				fallthrough
+
+			default:
+				if _, ok := varToAssign[ch]; ok {
+					varToAssign[ch][cor] = struct{}{}
+					continue
+				}
+				varToAssign[ch] = coordinatesLookup{cor: struct{}{}}
+			}
+		}
+
+	case "goal":
+		for j := range msg {
+			ch := msg[j]
+			if ch != config.FreeSpaceSymbol && ch != config.WallsSymbol {
+				cor := [2]int{row, j}
+				if _, ok := goalCoordinates[ch]; ok {
+					goalCoordinates[ch][cor] = struct{}{}
+					continue
+				}
+				goalCoordinates[ch] = coordinatesLookup{cor: struct{}{}}
+			}
+		}
+
+	default:
+		lvlInfo[mode] = msg
 	}
 }
 
