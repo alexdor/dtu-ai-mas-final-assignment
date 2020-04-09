@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/alexdor/dtu-ai-mas-final-assigment/config"
+	"github.com/alexdor/dtu-ai-mas-final-assignment/config"
 )
 
 var stdinReader *bufio.Reader

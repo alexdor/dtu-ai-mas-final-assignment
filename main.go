@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/alexdor/dtu-ai-mas-final-assigment/communication"
-	"github.com/alexdor/dtu-ai-mas-final-assigment/parser"
-	"github.com/alexdor/dtu-ai-mas-final-assigment/types"
+	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
+	"github.com/alexdor/dtu-ai-mas-final-assignment/parser"
+	"github.com/alexdor/dtu-ai-mas-final-assignment/types"
 )
 
 func main() {
