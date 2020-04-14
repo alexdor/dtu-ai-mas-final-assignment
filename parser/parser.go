@@ -60,23 +60,19 @@ func parseMode(mode, msg string, row uint, levelInfo *types.LevelInfo) {
 		}
 
 	case "initial":
-		agentOrBoxCoordinatesMap := levelInfo.BoxCoordinates
-
 		for j := range msg {
 			cor[1] = uint(j)
 			char := msg[j]
+			agentOrBoxCoordinatesMap := levelInfo.BoxCoordinates
 
 			switch {
 			case char == config.FreeSpaceSymbol:
 				continue
-
 			case char == config.WallsSymbol:
 				levelInfo.WallsCoordinates[cor] = struct{}{}
-
 			case '0' <= char && char <= '9':
 				agentOrBoxCoordinatesMap = levelInfo.AgentCoordinates
 				fallthrough
-
 			default:
 				if _, ok := agentOrBoxCoordinatesMap[char]; ok {
 					agentOrBoxCoordinatesMap[char][cor] = struct{}{}
