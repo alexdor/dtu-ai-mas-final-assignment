@@ -11,7 +11,7 @@ import (
 func ParseLevel() (types.LevelInfo, error) {
 	levelInfo := types.GetLevelInfo()
 	mode := ""
-	row := uint(0)
+	row := types.Point(0)
 
 	for {
 		msg, err := communication.ReadNextMessages()
@@ -41,8 +41,8 @@ func ParseLevel() (types.LevelInfo, error) {
 	return levelInfo, nil
 }
 
-func parseMode(mode, msg string, row uint, levelInfo *types.LevelInfo) {
-	cor := [2]uint{row, 0}
+func parseMode(mode, msg string, row types.Point, levelInfo *types.LevelInfo) {
+	cor := types.Coordinates{row, 0}
 
 	switch mode {
 	case "colors":
@@ -61,7 +61,7 @@ func parseMode(mode, msg string, row uint, levelInfo *types.LevelInfo) {
 
 	case "initial":
 		for j := range msg {
-			cor[1] = uint(j)
+			cor[1] = types.Point(j)
 			char := msg[j]
 			agentOrBoxCoordinatesMap := levelInfo.BoxCoordinates
 
@@ -88,7 +88,7 @@ func parseMode(mode, msg string, row uint, levelInfo *types.LevelInfo) {
 			char := msg[j]
 			if char != config.FreeSpaceSymbol && char != config.WallsSymbol {
 				if _, ok := levelInfo.GoalCoordinates[char]; ok {
-					cor[1] = uint(j)
+					cor[1] = types.Point(j)
 					levelInfo.GoalCoordinates[char][cor] = struct{}{}
 
 					continue
