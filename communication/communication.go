@@ -12,6 +12,7 @@ var stdinReader *bufio.Reader
 
 func Init() {
 	stdinReader = bufio.NewReader(os.Stdin)
+
 	SendMessage(config.Config.Name)
 }
 
@@ -22,10 +23,14 @@ func Error(message ...error) {
 	fmt.Fprintln(os.Stderr, "Error :", message)
 }
 
-func ReadNextMessages() (string, error) {
-	return stdinReader.ReadString('\n')
+func SendComment(message ...interface{}) {
+	fmt.Println("#", message)
 }
 
 func SendMessage(message ...interface{}) {
 	fmt.Fprintln(os.Stdout, message...)
+}
+
+func ReadNextMessages() (string, error) {
+	return stdinReader.ReadString('\n')
 }
