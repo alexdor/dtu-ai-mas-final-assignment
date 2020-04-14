@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "single-line-log": "^1.1.2",
+    "yargs": "^15.3.1"
+  },
+  "name": "AI-MAS",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/Collatty/AI-MAS.git",
+  "author": "Westh <haakonwesth@gmail.com>",
+  "license": "MIT"
+}
