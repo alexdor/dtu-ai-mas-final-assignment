@@ -9,6 +9,7 @@ var Config = config{
 }
 
 const (
-	WallsSymbol     = '+'
-	FreeSpaceSymbol = ' '
+	WallsSymbol      = '+'
+	FreeSpaceSymbol  = ' '
+	ServersTrueValue = "true"
 )
