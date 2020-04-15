@@ -56,8 +56,8 @@ func isBoxFree(coor types.Coordinates, levelInfo *types.LevelInfo) bool {
 
 func abs(x int) int {
 	if x < 0 {
-		return int(-x)
+		return -x
 	}
 
-	return int(x)
+	return x
 }

@@ -12,5 +12,5 @@ type Heuristic interface {
 type AStar struct{}
 
 func (AStar) Solve(levelInfo types.LevelInfo, cost Cost) [][]actions.Action {
-	panic("Astar isn't implimented")
+	panic("Astar isn't implemented")
 }
