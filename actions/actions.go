@@ -40,8 +40,15 @@ func ExecuteActions(actions ...Action) bool {
 	var b strings.Builder
 
 	for _, action := range actions {
-		b.WriteString(action)
-		b.WriteRune(';')
+		if _, err := b.WriteString(action); err != nil {
+			communication.Error(err)
+			return false
+		}
+
+		if _, err := b.WriteRune(';'); err != nil {
+			communication.Error(err)
+			return false
+		}
 	}
 
 	communication.SendMessage(strings.TrimRight(b.String(), ";"))
