@@ -141,5 +141,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Node 💩
-/node_modules
+# Node stuff
+node_modules/
+yarn.lock
+package-lock.json
+
+# main executable
+main
