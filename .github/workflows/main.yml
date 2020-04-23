@@ -1,0 +1,20 @@
+name: Main fucking workflow - fuck off
+on: push
+jobs:
+  run-forest-run:
+    name: Build and run
+    runs-on: ubuntu-latest
+    steps:
+      - name: ☁️ Checkout code
+        uses: actions/checkout@v1
+      - name: 📦 Install Go
+        uses: actions/setup-go@v1
+      - name: 📦 Install Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: '13'
+      - name: 📦 Install NodeJS and install depedencies
+        uses: actions/setup-go@v1
+      - run: yarn
+      - run: go build main.go
+      - run: node runner.js
