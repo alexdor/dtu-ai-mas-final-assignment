@@ -2,15 +2,34 @@ package ai
 
 import (
 	"github.com/alexdor/dtu-ai-mas-final-assignment/actions"
-	"github.com/alexdor/dtu-ai-mas-final-assignment/types"
+	"github.com/alexdor/dtu-ai-mas-final-assignment/level"
 )
 
-type Heuristic interface {
-	Solve(types.LevelInfo, Cost) [][]actions.Action
+type (
+	Heuristic interface {
+		Solve(*level.Info, Cost) [][]actions.Action
+	}
+
+	visited level.CoordinatesLookup
+
+	BiDirectionalBFS struct{}
+)
+
+func (b BiDirectionalBFS) Solve(levelInfo *level.Info, cost Cost) [][]actions.Action {
+	panic("BiDirectionBFS not implemented")
+	// lenToAllocate := len(levelInfo.WallsCoordinates) / 2
+	// srcVisited := make(visited, lenToAllocate)
+	// dstVisited := make(visited, lenToAllocate)
+
+	// queue := list.New()
+
+	// queue.PushBack()
+	// // add the root node to the map of the visited nodes
+	// visited[node.Id] = node
+
 }
 
-type AStar struct{}
-
-func (AStar) Solve(levelInfo types.LevelInfo, cost Cost) [][]actions.Action {
-	panic("Astar isn't implemented")
+func isIntersection(el level.Coordinates, lookupMap visited) bool {
+	_, ok := lookupMap[el]
+	return ok
 }
