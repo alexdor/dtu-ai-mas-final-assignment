@@ -5,13 +5,13 @@ import (
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
 	"github.com/alexdor/dtu-ai-mas-final-assignment/config"
-	"github.com/alexdor/dtu-ai-mas-final-assignment/types"
+	"github.com/alexdor/dtu-ai-mas-final-assignment/level"
 )
 
-func ParseLevel() (types.LevelInfo, error) {
-	levelInfo := types.GetLevelInfo()
+func ParseLevel() (level.Info, error) {
+	levelInfo := level.GetLevelInfo()
 	mode := ""
-	row := types.Point(0)
+	row := level.Point(0)
 
 	for {
 		msg, err := communication.ReadNextMessages()
@@ -41,8 +41,8 @@ func ParseLevel() (types.LevelInfo, error) {
 	return levelInfo, nil
 }
 
-func parseMode(mode, msg string, row types.Point, levelInfo *types.LevelInfo) {
-	cor := types.Coordinates{row, 0}
+func parseMode(mode, msg string, row level.Point, levelInfo *level.Info) {
+	cor := level.Coordinates{row, 0}
 
 	switch mode {
 	case "colors":
@@ -61,7 +61,7 @@ func parseMode(mode, msg string, row types.Point, levelInfo *types.LevelInfo) {
 
 	case "initial":
 		for j := range msg {
-			cor[1] = types.Point(j)
+			cor[1] = level.Point(j)
 			char := msg[j]
 			agentOrBoxCoordinatesMap := levelInfo.BoxCoordinates
 
@@ -79,7 +79,7 @@ func parseMode(mode, msg string, row types.Point, levelInfo *types.LevelInfo) {
 					continue
 				}
 
-				agentOrBoxCoordinatesMap[char] = types.CoordinatesLookup{cor: struct{}{}}
+				agentOrBoxCoordinatesMap[char] = level.CoordinatesLookup{cor: struct{}{}}
 			}
 		}
 
@@ -88,13 +88,13 @@ func parseMode(mode, msg string, row types.Point, levelInfo *types.LevelInfo) {
 			char := msg[j]
 			if char != config.FreeSpaceSymbol && char != config.WallsSymbol {
 				if _, ok := levelInfo.GoalCoordinates[char]; ok {
-					cor[1] = types.Point(j)
+					cor[1] = level.Point(j)
 					levelInfo.GoalCoordinates[char][cor] = struct{}{}
 
 					continue
 				}
 
-				levelInfo.GoalCoordinates[char] = types.CoordinatesLookup{cor: struct{}{}}
+				levelInfo.GoalCoordinates[char] = level.CoordinatesLookup{cor: struct{}{}}
 			}
 		}
 

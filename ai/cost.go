@@ -3,16 +3,16 @@ package ai
 import (
 	"math"
 
-	"github.com/alexdor/dtu-ai-mas-final-assignment/types"
+	"github.com/alexdor/dtu-ai-mas-final-assignment/level"
 )
 
 type Cost interface {
-	Calculate(types.LevelInfo) int
+	Calculate(*level.Info) int
 }
 
 type ManhattanDistance struct{}
 
-func (ManhattanDistance) Calculate(levelInfo *types.LevelInfo) int {
+func (ManhattanDistance) Calculate(levelInfo *level.Info) int {
 	// Should we add the distance from the agents to the box here?
 	distance := 0
 
@@ -32,26 +32,6 @@ func (ManhattanDistance) Calculate(levelInfo *types.LevelInfo) int {
 	}
 
 	return distance
-}
-
-func isBoxFree(coor types.Coordinates, levelInfo *types.LevelInfo) bool {
-	if _, ok := levelInfo.WallsCoordinates[coor]; ok {
-		return true
-	}
-
-	for _, coord := range levelInfo.AgentCoordinates {
-		if _, ok := coord[coor]; ok {
-			return true
-		}
-	}
-
-	for _, coord := range levelInfo.BoxCoordinates {
-		if _, ok := coord[coor]; ok {
-			return true
-		}
-	}
-
-	return false
 }
 
 func abs(x int) int {
