@@ -1,0 +1,23 @@
+name: 🏃
+on: push
+jobs:
+  run-forest-run:
+    name: Build and run
+    runs-on: ubuntu-latest
+    steps:
+      - name: ☁️ Checkout code
+        uses: actions/checkout@v2
+      - name: 📦 Install Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: '13'
+      - name: 📦 Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.14.2'
+      - name: 🖕 Install NodeJS depedencies
+        run: yarn
+      - name: 👷 Build go executable
+        run: go build main.go
+      - name: 🏃 Run forest run!
+        run: node runner.js -l levels/comp18 -c "./main" -t 180
