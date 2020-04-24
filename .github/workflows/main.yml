@@ -6,13 +6,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: ☁️ Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: 📦 Install Java
         uses: actions/setup-java@v1
         with:
           java-version: '13'
       - name: 📦 Install Go
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.14.2'
       - name: 🖕 Install NodeJS depedencies
         run: yarn
       - name: 👷 Build go executable
