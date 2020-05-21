@@ -95,7 +95,7 @@ func (c *CurrentState) ExpandSingleAgent(nodesInFrontier Visited) []*CurrentStat
 
 		if c.LevelInfo.IsCellFree(newCoor, c) {
 			newState.Agents[agentIndex].Coordinates = newCoor
-			newState.Moves = append(newState.Moves, actions.Move(directionForCoordinates[coordIndex])...)
+			newState.Moves = append(newState.Moves, actions.Move(directionForCoordinates[coordIndex], actions.SingleAgentEnd)...)
 			addStateToStatesToExplore(&nextStates, &newState, nodesInFrontier)
 
 			continue
@@ -154,7 +154,7 @@ func expandBoxMoves(state *CurrentState, nextStates *[]*CurrentState, boxCoorToM
 
 			state.copy(&copyOfState)
 
-			moveAction := action(coordToDirection(currentAgentCoord, agentCoor), boxDirection)
+			moveAction := action(coordToDirection(currentAgentCoord, agentCoor), boxDirection, actions.SingleAgentEnd)
 			copyOfState.Moves = append(copyOfState.Moves, moveAction...)
 			copyOfState.Agents[agentIndex].Coordinates = agentCoor
 			copyOfState.Boxes[boxIndex].Coordinates = boxCoor
