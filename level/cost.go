@@ -42,23 +42,22 @@ func abs(x int) int {
 }
 
 func CalculateWallsCost(boxCoordinates Coordinates, goalCoordinates Coordinates, currentState *CurrentState) int {
+	penalitySize := 3
 	isXcoordOfBoxSmallest := boxCoordinates[0] < goalCoordinates[0]
 	isYcoordOfBoxSmallest := boxCoordinates[1] < goalCoordinates[1]
 
-	var smallXcoord, bigXcoord, smallYcoord, bigYcoord int
+	smallXcoord := boxCoordinates[0]
+	bigXcoord := goalCoordinates[0]
 
-	if isXcoordOfBoxSmallest {
-		smallXcoord = boxCoordinates[0]
-		bigXcoord = goalCoordinates[0]
-	} else {
+	if !isXcoordOfBoxSmallest {
 		smallXcoord = goalCoordinates[0]
 		bigXcoord = boxCoordinates[0]
 	}
 
-	if isYcoordOfBoxSmallest {
-		smallYcoord = boxCoordinates[1]
-		bigYcoord = goalCoordinates[1]
-	} else {
+	smallYcoord := boxCoordinates[1]
+	bigYcoord := goalCoordinates[1]
+
+	if !isYcoordOfBoxSmallest {
 		smallYcoord = goalCoordinates[1]
 		bigYcoord = boxCoordinates[1]
 	}
@@ -69,7 +68,7 @@ func CalculateWallsCost(boxCoordinates Coordinates, goalCoordinates Coordinates,
 		for y := 0; y < bigYcoord-smallYcoord; y++ {
 			newCoor := Coordinates{smallXcoord + x, smallYcoord + y}
 			if currentState.LevelInfo.IsWall(newCoor) {
-				cost = +1
+				cost += penalitySize
 			}
 		}
 	}
