@@ -27,8 +27,9 @@ func SendComment(message ...interface{}) {
 	fmt.Println("#", message)
 }
 
-func SendMessage(message ...interface{}) {
+func SendMessage(message ...interface{}) (string, error) {
 	fmt.Fprintln(os.Stdout, message...)
+	return ReadNextMessages()
 }
 
 func ReadNextMessages() (string, error) {

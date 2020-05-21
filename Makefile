@@ -10,10 +10,10 @@ ifdef level
 endif
 
 start:
-	@bash -c 'java -jar server.jar -l $(LEVEL) -c "go run ." -t 300'
+	@bash -c 'go build . && java -jar server.jar -l $(LEVEL) -c "./dtu-ai-mas-final-assignment" -t 300'
 
 start-gui:
-	@bash -c 'java -jar server.jar -l $(LEVEL) -c "go run ." -t 300 -g'
+	@bash -c 'go build . && java -jar server.jar -l $(LEVEL) -c "./dtu-ai-mas-final-assignment" -t 300 -g'
 
 start-debug:
 	@bash -c 'go build . && DEBUG=true java -jar server.jar -l $(LEVEL) -c "./dtu-ai-mas-final-assignment" -g'
