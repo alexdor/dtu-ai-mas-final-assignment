@@ -22,17 +22,6 @@ type (
 	AStart struct{}
 )
 
-// func (b BiDirectionalBFS) Solve(levelInfo *level.Info, currentState level.CurrentState, cost Cost) [][]actions.Action {
-// 	panic("smth")
-// 	lenToAllocate := len(levelInfo.WallsCoordinates) / 2
-// 	srcVisited := make(visited, lenToAllocate)
-// 	dstVisited := make(visited, lenToAllocate)
-// 	queue := list.New()
-// 	queue.PushBack(currentState)
-// 	// add the root node to the map of the visited nodes
-// 	visited[currentState.GetID()] = currentState
-// }
-
 func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) actions.Action {
 	if len(os.Getenv("DEBUG")) > 0 {
 		time.Sleep(10 * time.Second)
@@ -77,9 +66,4 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 		}
 	}
 	panic("My ass is on fire")
-}
-
-func isIntersection(id level.ID, lookupMap visited) bool {
-	_, ok := lookupMap[id]
-	return ok
 }

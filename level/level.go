@@ -58,12 +58,3 @@ func (i *Info) Init() {
 	i.WallsCoordinates = make(CoordinatesLookup, 15)
 	i.GoalCoordinates = IntrestingCoordinates{}
 }
-
-func pointToByteArray(val Point) []byte {
-	r := make([]byte, 4)
-	for i := uint32(0); i < 4; i++ {
-		r[i] = byte((val >> (8 * i)) & 0xff)
-	}
-
-	return r
-}

@@ -10,6 +10,8 @@ import (
 	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
 )
 
+var ErrFailedToFindBox = errors.New("Failed to find box")
+
 type CurrentState struct {
 	Boxes     []NodeOrAgent
 	Agents    []NodeOrAgent
@@ -181,7 +183,7 @@ func (c *CurrentState) FindBoxAt(coord Coordinates) int {
 		}
 	}
 
-	communication.Error(errors.New("Failed to find box"))
+	communication.Error(ErrFailedToFindBox)
 
 	return -1
 }
