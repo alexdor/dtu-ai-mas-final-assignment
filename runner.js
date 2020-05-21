@@ -18,6 +18,10 @@ const argv = require("yargs")
     alias: "i",
     describe: "ignore levels where the filaname start with this prefix",
   })
+  .option("outputMode", {
+    alias: "o",
+    describe: "output mode, ",
+  })
   .help("h", "Show help")
   .alias("help", "h").argv;
 
@@ -25,6 +29,7 @@ const timeout = argv.timeout || 180;
 const levelsDir = argv.levels || "./levels";
 const command = argv.command || "java -cp target/classes: Client";
 const prefixToIgnore = argv.ignorePrefix;
+const shouldOutputContinuously = argv.outputMode === 'continuous';
 
 const results = {
   total: 0,
@@ -61,7 +66,7 @@ function main() {
       console.log(error);
     });
     child.on("exit", (code) => {
-      clearInterval(timer);
+      if (shouldOutputContinuously) clearInterval(timer);
 
       const isSuccessCode = code === 0;
       if (!isSuccessCode) process.exit();
@@ -81,9 +86,18 @@ function main() {
 
       log.clear();
 
+      if (!shouldOutputContinuously) {
+        logStatus({
+          ...results,
+          currentlvl: level,
+        }, shouldOutputContinuously);
+      }
+
       const isFinished = levelIndex === levels.length - 1;
       if (!isFinished) runThatLevel(++levelIndex);
     });
+
+    if (!shouldOutputContinuously) return;
 
     let count = 0;
 
@@ -93,15 +107,21 @@ function main() {
         ...results,
         currentlvl: level,
         time: count.toFixed(1),
-      });
+      }, shouldOutputContinuously);
     }, 100);
   }
 
   runThatLevel(0);
 }
 
-function logStatus(status) {
-  let logLine = `🏃‍♂️ Currently running ${status.currentlvl} [${status.time} s]\n`;
+function logStatus(status, isContinuousOutputSet) {
+  const runMessage = isContinuousOutputSet
+    ? 'Currently running'
+    : 'Just ran';
+  const timeMessage = isContinuousOutputSet
+    ? `[${status.time} s]`
+    : '';
+  let logLine = `🏃 ${runMessage} ${status.currentlvl} ${timeMessage}\n`;
   logLine += `✅ Number of solved levels ${status.solved}\n`;
   logLine += `❌ Number of failed levels ${status.failed}\n`;
   logLine += `⏳ Levels left ${status.total - (status.solved + status.failed)}`;
