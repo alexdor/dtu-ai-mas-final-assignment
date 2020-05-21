@@ -197,13 +197,17 @@ func (c *CurrentState) FindBoxAt(coord Coordinates) int {
 }
 
 func (c *CurrentState) IsGoalState() bool {
+	goalCounter := 0
 outer:
 	for char, goal := range c.LevelInfo.GoalCoordinates {
 		for _, box := range c.Boxes {
 			if char == box.Letter {
+				goalCounter = 0
 				for _, coor := range goal {
 					if box.Coordinates == coor {
-						continue outer
+						if goalCounter++; goalCounter == len(goal) {
+							continue outer
+						}
 					}
 				}
 			}
