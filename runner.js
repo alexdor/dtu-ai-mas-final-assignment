@@ -29,7 +29,7 @@ const timeout = argv.timeout || 180;
 const levelsDir = argv.levels || "./levels";
 const command = argv.command || "java -cp target/classes: Client";
 const prefixToIgnore = argv.ignorePrefix;
-const shouldOutputContinuously = argv.outputMode === 'continuous'
+const shouldOutputContinuously = argv.outputMode === 'continuous';
 
 const results = {
   total: 0,
