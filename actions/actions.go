@@ -46,7 +46,6 @@ func ExecuteActions(actions Action) bool {
 	stringActions := string(actions)
 
 	for _, action := range strings.Split(stringActions, ";") {
-		action = strings.Split(action, "!")[0]
 		communication.SendMessage(strings.TrimRight(action, ";"))
 
 		res, err := communication.ReadNextMessages()
