@@ -8,10 +8,10 @@ import (
 	"github.com/alexdor/dtu-ai-mas-final-assignment/config"
 )
 
-var stdinReader *bufio.Reader
+var stdinReader *bufio.Scanner
 
 func Init() {
-	stdinReader = bufio.NewReader(os.Stdin)
+	stdinReader = bufio.NewScanner(os.Stdin)
 
 	SendMessage(config.Config.Name)
 }
@@ -32,5 +32,6 @@ func SendMessage(message ...interface{}) {
 }
 
 func ReadNextMessages() (string, error) {
-	return stdinReader.ReadString('\n')
+	stdinReader.Scan()
+	return stdinReader.Text(), stdinReader.Err()
 }
