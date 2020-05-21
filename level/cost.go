@@ -19,7 +19,7 @@ func CalculateManhattanDistance(currentState *CurrentState) int {
 		goals := currentState.LevelInfo.GoalCoordinates[box.Letter]
 
 		for _, goalCoordinates := range goals {
-			cost := abs(int(box.Coordinates[0]-goalCoordinates[0])) + abs(int(box.Coordinates[1]-goalCoordinates[1]))
+			cost := abs(box.Coordinates[0]-goalCoordinates[0]) + abs(box.Coordinates[1]-goalCoordinates[1])
 			if cost < min {
 				min = cost
 			}
