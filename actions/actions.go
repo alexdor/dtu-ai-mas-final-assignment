@@ -52,8 +52,6 @@ func ExecuteActions(actions Action) bool {
 			communication.Error(err)
 			return false
 		}
-		communication.Log(strings.TrimRight(action, ";"))
-		communication.Log(res, err)
 
 		for _, msg := range strings.Split(res, ";") {
 			if msg != config.ServersTrueValue {
