@@ -8,9 +8,8 @@ import (
 )
 
 type (
-	Direction = byte
-	Action    = []byte
-
+	Direction  = byte
+	Action     = []byte
 	PushOrPull func(agentDirection, boxDirecation Direction) Action
 )
 
@@ -24,20 +23,23 @@ var (
 	West  Direction = 'W'
 	South Direction = 'S'
 	East  Direction = 'E'
+
+	SingleAgentEnd = byte('\n')
+	MultiAgentEnd  = byte(';')
 )
 
-func Move(direction Direction) Action {
-	return append(move, '(', direction, ')', '\n')
+func Move(direction Direction, endWith byte) Action {
+	return append(move, '(', direction, ')', endWith)
 }
 
-type PullOrPush = func(agentDirection, boxDirecation Direction) Action
+type PullOrPush = func(agentDirection, boxDirecation Direction, endWith byte) Action
 
-func Pull(agentDirection, boxDirecation Direction) Action {
-	return append(pull, '(', agentDirection, ',', boxDirecation, ')', '\n')
+func Pull(agentDirection, boxDirecation Direction, endWith byte) Action {
+	return append(pull, '(', agentDirection, ',', boxDirecation, ')', endWith)
 }
 
-func Push(agentDirection, boxDirecation Direction) Action {
-	return append(push, '(', agentDirection, ',', boxDirecation, ')', '\n')
+func Push(agentDirection, boxDirecation Direction, endWith byte) Action {
+	return append(push, '(', agentDirection, ',', boxDirecation, ')', endWith)
 }
 
 func ExecuteActions(actions Action) bool {
