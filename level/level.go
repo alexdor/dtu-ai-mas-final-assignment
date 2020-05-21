@@ -1,59 +1,69 @@
 package level
 
-type SimpleMap map[byte]string
+type (
+	SimpleMap map[byte]string
 
-// We might be able to use uint16 here
-type Point uint32
+	Point int32
 
-type Coordinates [2]Point
+	// Coordinates {row,column}
+	Coordinates [2]Point
 
-type CoordinatesLookup map[Coordinates]struct{}
+	CoordinatesLookup map[Coordinates]struct{}
 
-type IntrestingCoordinates map[byte]CoordinatesLookup
-type Info struct {
-	LevelInfo        map[string]string
-	AgentColor       SimpleMap
-	BoxColor         SimpleMap
-	WallsCoordinates CoordinatesLookup
-	GoalCoordinates  IntrestingCoordinates
-	// TODO: consider using a simple list
-	AgentCoordinates IntrestingCoordinates
-	BoxCoordinates   IntrestingCoordinates
-}
+	IntrestingCoordinates map[byte][]Coordinates
+
+	NodeOrAgent struct {
+		Letter byte
+		Coordinates
+	}
+
+	ID string
+
+	Info struct {
+		LevelInfo        map[string]string
+		AgentColor       SimpleMap
+		BoxColor         SimpleMap
+		WallsCoordinates CoordinatesLookup
+		GoalCoordinates  IntrestingCoordinates
+	}
+)
 
 func (levelInfo Info) IsWall(coor Coordinates) bool {
 	_, ok := levelInfo.WallsCoordinates[coor]
 	return ok
 }
-
-func (levelInfo Info) sBoxFree(coor Coordinates) bool {
-	if _, ok := levelInfo.WallsCoordinates[coor]; ok {
-		return true
-	}
-
-	for _, coord := range levelInfo.AgentCoordinates {
-		if _, ok := coord[coor]; ok {
-			return true
-		}
-	}
-
-	for _, coord := range levelInfo.BoxCoordinates {
-		if _, ok := coord[coor]; ok {
-			return true
-		}
-	}
-
-	return false
+func (levelInfo Info) IsBox(coor Coordinates) bool {
+	_, ok := levelInfo.WallsCoordinates[coor]
+	return ok
 }
 
-func GetLevelInfo() Info {
-	return Info{
-		LevelInfo:        make(map[string]string, 2),
-		AgentColor:       SimpleMap{},
-		BoxColor:         SimpleMap{},
-		WallsCoordinates: make(CoordinatesLookup, 15),
-		GoalCoordinates:  IntrestingCoordinates{},
-		AgentCoordinates: IntrestingCoordinates{},
-		BoxCoordinates:   IntrestingCoordinates{},
+func (levelInfo Info) IsCellFree(coor Coordinates, currentState *CurrentState) bool {
+	if _, ok := levelInfo.WallsCoordinates[coor]; ok {
+		return false
 	}
+
+	for _, v := range append(currentState.Boxes, currentState.Agents...) {
+		if v.Coordinates == coor {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (i *Info) Init() {
+	i.LevelInfo = make(map[string]string, 2)
+	i.AgentColor = SimpleMap{}
+	i.BoxColor = SimpleMap{}
+	i.WallsCoordinates = make(CoordinatesLookup, 15)
+	i.GoalCoordinates = IntrestingCoordinates{}
+}
+
+func pointToByteArray(val Point) []byte {
+	r := make([]byte, 4)
+	for i := uint32(0); i < 4; i++ {
+		r[i] = byte((val >> (8 * i)) & 0xff)
+	}
+
+	return r
 }
