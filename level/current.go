@@ -104,7 +104,7 @@ func (c *CurrentState) Expand(nodesInFrontier Visited) []*CurrentState {
 				continue
 			}
 
-			expandBoxMoves(&newState, &nextStates, &newCoor, agentIndex, nodesInFrontier)
+			expandBoxMoves(&newState, &nextStates, &newCoor, coordIndex, agentIndex, nodesInFrontier)
 		}
 	}
 
@@ -113,7 +113,7 @@ func (c *CurrentState) Expand(nodesInFrontier Visited) []*CurrentState {
 	return nextStates
 }
 
-func expandBoxMoves(state *CurrentState, nextStates *[]*CurrentState, boxCoorToMove *Coordinates, agentIndex int, nodesVisited Visited) {
+func expandBoxMoves(state *CurrentState, nextStates *[]*CurrentState, boxCoorToMove *Coordinates, boxCoordIndex, agentIndex int, nodesVisited Visited) {
 	// Prealloc variables
 	var (
 		isPush bool
@@ -143,15 +143,16 @@ func expandBoxMoves(state *CurrentState, nextStates *[]*CurrentState, boxCoorToM
 			}
 
 			agentCoor, boxCoor = cellToMoveInto, currentAgentCoord
-
+			boxDirection := directionForCoordinates[boxCoordIndex]
 			if isPush {
 				agentCoor, boxCoor = currentBoxCoor, agentCoor
+				boxDirection = coordToDirection(currentBoxCoor, boxCoor)
 			}
 
 			var copyOfState CurrentState
 			state.copy(&copyOfState)
 
-			moveAction := action(coordToDirection(currentAgentCoord, agentCoor), coordToDirection(currentBoxCoor, boxCoor))
+			moveAction := action(coordToDirection(currentAgentCoord, agentCoor), boxDirection)
 			copyOfState.Moves = append(copyOfState.Moves, moveAction...)
 			copyOfState.Agents[agentIndex].Coordinates = agentCoor
 			copyOfState.Boxes[boxIndex].Coordinates = boxCoor
