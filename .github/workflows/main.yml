@@ -10,14 +10,14 @@ jobs:
       - name: 📦 Install Java
         uses: actions/setup-java@v1
         with:
-          java-version: '13'
+          java-version: "13"
       - name: 📦 Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: '^1.14.2'
+          go-version: "^1.14.3"
       - name: 🖕 Install NodeJS depedencies
         run: yarn
       - name: 👷 Build go executable
         run: go build main.go
       - name: 🏃 Run forest run!
-        run: node runner.js -l levels/comp18 -c "./main" -t 180
+        run: node runner.js -l levels/comp18 -c "./main" -t 180 -i MA
