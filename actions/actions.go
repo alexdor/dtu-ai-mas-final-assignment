@@ -48,8 +48,8 @@ func ExecuteActions(actions Action) bool {
 		if len(action) == 0 {
 			continue
 		}
-		res, err := communication.SendMessage(action)
 
+		res, err := communication.SendMessage(action)
 		if err != nil {
 			communication.Error(err)
 			return false
@@ -61,5 +61,6 @@ func ExecuteActions(actions Action) bool {
 			}
 		}
 	}
+
 	return true
 }
