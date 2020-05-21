@@ -45,8 +45,12 @@ func (c *CurrentState) GetID() ID {
 			if err != nil {
 				communication.Error(err)
 			}
-		}
 
+			err = s.WriteByte(' ')
+			if err != nil {
+				communication.Error(err)
+			}
+		}
 		c.ID = ID(s.String())
 	}
 
@@ -57,6 +61,8 @@ var (
 	directionForCoordinates = []byte{actions.East, actions.West, actions.North, actions.South}
 	coordManipulation       = []Coordinates{{0, 1}, {0, -1}, {-1, 0}, {1, 0}}
 	pullOrPush              = []actions.PullOrPush{actions.Pull, actions.Push}
+	wg                      = &sync.WaitGroup{}
+	nextStateLock           = sync.Mutex{}
 )
 
 func (c *CurrentState) copy(newState *CurrentState) {
@@ -70,11 +76,8 @@ func (c *CurrentState) copy(newState *CurrentState) {
 
 }
 
-func (c *CurrentState) Expand() []CurrentState {
-	nextStates := []CurrentState{}
-	wg := &sync.WaitGroup{}
-
-	var newState CurrentState
+func (c *CurrentState) Expand(nodesInFrontier Visited) []*CurrentState {
+	nextStates := []*CurrentState{}
 
 	//TODO: Figure out multiagent
 	for agentIndex, agent := range c.Agents {
@@ -86,12 +89,13 @@ func (c *CurrentState) Expand() []CurrentState {
 				continue
 			}
 
+			var newState CurrentState
 			c.copy(&newState)
 
 			if c.LevelInfo.IsCellFree(newCoor, c) {
 				newState.Agents[agentIndex].Coordinates = newCoor
 				newState.Moves = append(newState.Moves, actions.Move(directionForCoordinates[coordIndex])...)
-				addStateToStatesToExplore(&nextStates, newState, wg)
+				addStateToStatesToExplore(&nextStates, &newState, nodesInFrontier)
 
 				continue
 			}
@@ -100,7 +104,7 @@ func (c *CurrentState) Expand() []CurrentState {
 				continue
 			}
 
-			expandBoxMoves(&newState, &nextStates, &newCoor, agentIndex, wg)
+			expandBoxMoves(&newState, &nextStates, &newCoor, agentIndex, nodesInFrontier)
 		}
 	}
 
@@ -109,7 +113,7 @@ func (c *CurrentState) Expand() []CurrentState {
 	return nextStates
 }
 
-func expandBoxMoves(state *CurrentState, nextStates *[]CurrentState, boxCoorToMove *Coordinates, agentIndex int, wg *sync.WaitGroup) {
+func expandBoxMoves(state *CurrentState, nextStates *[]*CurrentState, boxCoorToMove *Coordinates, agentIndex int, nodesVisited Visited) {
 	// Prealloc variables
 	var (
 		isPush bool
@@ -117,7 +121,6 @@ func expandBoxMoves(state *CurrentState, nextStates *[]CurrentState, boxCoorToMo
 		cellToMoveInto,
 		agentCoor,
 		boxCoor Coordinates
-		copyOfState CurrentState
 	)
 
 	boxIndex := state.FindBoxAt(*boxCoorToMove)
@@ -145,13 +148,15 @@ func expandBoxMoves(state *CurrentState, nextStates *[]CurrentState, boxCoorToMo
 				agentCoor, boxCoor = currentBoxCoor, agentCoor
 			}
 
+			var copyOfState CurrentState
 			state.copy(&copyOfState)
 
 			moveAction := action(coordToDirection(currentAgentCoord, agentCoor), coordToDirection(currentBoxCoor, boxCoor))
 			copyOfState.Moves = append(copyOfState.Moves, moveAction...)
 			copyOfState.Agents[agentIndex].Coordinates = agentCoor
 			copyOfState.Boxes[boxIndex].Coordinates = boxCoor
-			addStateToStatesToExplore(nextStates, copyOfState, wg)
+
+			addStateToStatesToExplore(nextStates, &copyOfState, nodesVisited)
 		}
 	}
 }
@@ -165,16 +170,18 @@ func coordToDirection(oldCoord, newCoord Coordinates) actions.Direction {
 	panic("Failed to find direction, this should never happen")
 }
 
-func calcCost(newState *CurrentState, wg *sync.WaitGroup) {
+func calculateCost(newState *CurrentState, nodesVisited Visited) {
 	defer wg.Done()
-	newState.CalculateCost()
+	if _, ok := nodesVisited[newState.GetID()]; !ok {
+		newState.CalculateCost()
+	}
+
 }
-
-func addStateToStatesToExplore(nextStates *[]CurrentState, newState CurrentState, wg *sync.WaitGroup) {
+func addStateToStatesToExplore(nextStates *[]*CurrentState, newState *CurrentState, nodesVisited Visited) {
 	wg.Add(1)
-
-	go calcCost(&newState, wg)
 	*nextStates = append(*nextStates, newState)
+
+	go calculateCost(newState, nodesVisited)
 }
 func (c *CurrentState) FindBoxAt(coord Coordinates) int {
 	for i, box := range c.Boxes {
@@ -216,5 +223,8 @@ func (c *CurrentState) IsBoxAndCanMove(coor Coordinates, agentChar byte) bool {
 }
 
 func (c *CurrentState) CalculateCost() {
-	c.Cost = CalculateManhattanDistance(c)
+	if c.Cost == 0 {
+		c.Cost = CalculateManhattanDistance(c)
+		// communication.Log(c.ID, c.Cost)
+	}
 }
