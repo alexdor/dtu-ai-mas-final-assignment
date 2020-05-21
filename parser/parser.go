@@ -8,8 +8,11 @@ import (
 	"github.com/alexdor/dtu-ai-mas-final-assignment/level"
 )
 
-func ParseLevel() (level.Info, error) {
-	levelInfo := level.GetLevelInfo()
+func ParseLevel() (level.Info, level.CurrentState, error) {
+	levelInfo := level.Info{}
+	levelInfo.Init()
+
+	currentState := level.CurrentState{}
 	mode := ""
 	row := level.Point(0)
 
@@ -17,7 +20,7 @@ func ParseLevel() (level.Info, error) {
 		msg, err := communication.ReadNextMessages()
 		if err != nil {
 			communication.Error(err)
-			return levelInfo, err
+			return levelInfo, currentState, err
 		}
 
 		msg = strings.TrimSpace(msg)
@@ -34,14 +37,14 @@ func ParseLevel() (level.Info, error) {
 			continue
 		}
 
-		parseMode(mode, msg, row, &levelInfo)
+		parseMode(mode, msg, row, &levelInfo, &currentState)
 		row++
 	}
 
-	return levelInfo, nil
+	return levelInfo, currentState, nil
 }
 
-func parseMode(mode, msg string, row level.Point, levelInfo *level.Info) {
+func parseMode(mode, msg string, row level.Point, levelInfo *level.Info, currentState *level.CurrentState) {
 	cor := level.Coordinates{row, 0}
 
 	switch mode {
@@ -63,7 +66,7 @@ func parseMode(mode, msg string, row level.Point, levelInfo *level.Info) {
 		for j := range msg {
 			cor[1] = level.Point(j)
 			char := msg[j]
-			agentOrBoxCoordinatesMap := levelInfo.BoxCoordinates
+			agentOrBoxCoordinatesMap := &currentState.Boxes
 
 			switch {
 			case char == config.FreeSpaceSymbol:
@@ -71,15 +74,14 @@ func parseMode(mode, msg string, row level.Point, levelInfo *level.Info) {
 			case char == config.WallsSymbol:
 				levelInfo.WallsCoordinates[cor] = struct{}{}
 			case '0' <= char && char <= '9':
-				agentOrBoxCoordinatesMap = levelInfo.AgentCoordinates
+				agentOrBoxCoordinatesMap = &currentState.Agents
 				fallthrough
 			default:
-				if _, ok := agentOrBoxCoordinatesMap[char]; ok {
-					agentOrBoxCoordinatesMap[char][cor] = struct{}{}
-					continue
-				}
-
-				agentOrBoxCoordinatesMap[char] = level.CoordinatesLookup{cor: struct{}{}}
+				*agentOrBoxCoordinatesMap = append(*agentOrBoxCoordinatesMap,
+					level.NodeOrAgent{
+						Letter:      char,
+						Coordinates: cor,
+					})
 			}
 		}
 
@@ -87,14 +89,15 @@ func parseMode(mode, msg string, row level.Point, levelInfo *level.Info) {
 		for j := range msg {
 			char := msg[j]
 			if char != config.FreeSpaceSymbol && char != config.WallsSymbol {
+				cor[1] = level.Point(j)
+
 				if _, ok := levelInfo.GoalCoordinates[char]; ok {
-					cor[1] = level.Point(j)
-					levelInfo.GoalCoordinates[char][cor] = struct{}{}
+					levelInfo.GoalCoordinates[char] = append(levelInfo.GoalCoordinates[char], cor)
 
 					continue
 				}
 
-				levelInfo.GoalCoordinates[char] = level.CoordinatesLookup{cor: struct{}{}}
+				levelInfo.GoalCoordinates[char] = []level.Coordinates{cor}
 			}
 		}
 
