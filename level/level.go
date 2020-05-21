@@ -3,7 +3,7 @@ package level
 type (
 	SimpleMap map[byte]string
 
-	Point int32
+	Point = int
 
 	// Coordinates {row,column}
 	Coordinates [2]Point
@@ -16,6 +16,8 @@ type (
 		Letter byte
 		Coordinates
 	}
+
+	Visited map[ID]struct{}
 
 	ID string
 
