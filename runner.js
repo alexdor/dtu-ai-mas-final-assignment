@@ -14,12 +14,17 @@ const argv = require("yargs")
     alias: "c",
     describe: "command used to run client",
   })
+  .option("ignorePrefix", {
+    alias: "i",
+    describe: "ignore levels where the filaname start with this prefix",
+  })
   .help("h", "Show help")
   .alias("help", "h").argv;
 
 const timeout = argv.timeout || 180;
 const levelsDir = argv.levels || "./levels";
 const command = argv.command || "java -cp target/classes: Client";
+const prefixToIgnore = argv.ignorePrefix;
 
 const results = {
   total: 0,
@@ -29,7 +34,9 @@ const results = {
 };
 
 function main() {
-  const levels = fs.readdirSync(levelsDir);
+  const levels = fs
+    .readdirSync(levelsDir)
+    .filter((lvl) => !prefixToIgnore || !lvl.startsWith(prefixToIgnore));
   results.total = levels.length;
 
   function runThatLevel(levelIndex) {
