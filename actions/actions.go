@@ -44,19 +44,22 @@ func Push(agentDirection, boxDirecation Direction, endWith byte) Action {
 
 func ExecuteActions(actions Action) bool {
 	// TODO: Fix multi agent actions execution
-	communication.SendMessage(strings.TrimRight(string(actions), "\n"))
-	res, err := communication.ReadNextMessages()
+	for _, action := range strings.Split(string(actions), "\n") {
+		if len(action) == 0 {
+			continue
+		}
+		res, err := communication.SendMessage(action)
 
-	if err != nil {
-		communication.Error(err)
-		return false
-	}
-
-	for _, msg := range strings.Split(res, ";") {
-		if msg != config.ServersTrueValue {
+		if err != nil {
+			communication.Error(err)
 			return false
 		}
-	}
 
+		for _, msg := range strings.Split(res, ";") {
+			if msg != config.ServersTrueValue {
+				return false
+			}
+		}
+	}
 	return true
 }
