@@ -46,7 +46,7 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 		}
 
 	outer:
-		for _, child := range value.Expand(nodesVisited) {
+		for _, child := range value.ExpandSingleAgent(nodesVisited) {
 			// The only writer to the map (this happens after all goroutines are done)
 			// If the above changes, this is going to lead to a race condition
 			if _, ok := nodesVisited[child.ID]; !ok {
