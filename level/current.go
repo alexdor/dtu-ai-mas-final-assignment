@@ -51,6 +51,7 @@ func (c *CurrentState) GetID() ID {
 				communication.Error(err)
 			}
 		}
+
 		c.ID = ID(s.String())
 	}
 
@@ -62,7 +63,6 @@ var (
 	coordManipulation       = []Coordinates{{0, 1}, {0, -1}, {-1, 0}, {1, 0}}
 	pullOrPush              = []actions.PullOrPush{actions.Pull, actions.Push}
 	wg                      = &sync.WaitGroup{}
-	nextStateLock           = sync.Mutex{}
 )
 
 func (c *CurrentState) copy(newState *CurrentState) {
@@ -76,36 +76,36 @@ func (c *CurrentState) copy(newState *CurrentState) {
 
 }
 
-func (c *CurrentState) Expand(nodesInFrontier Visited) []*CurrentState {
+//TODO: Figure out multiagent
+func (c *CurrentState) ExpandSingleAgent(nodesInFrontier Visited) []*CurrentState {
+	agentIndex := 0
+	agent := c.Agents[0]
 	nextStates := []*CurrentState{}
+	agentCoor := agent.Coordinates
 
-	//TODO: Figure out multiagent
-	for agentIndex, agent := range c.Agents {
-		agentCoor := agent.Coordinates
-
-		for coordIndex, move := range coordManipulation {
-			newCoor := Coordinates{agentCoor[0] + move[0], agentCoor[1] + move[1]}
-			if c.LevelInfo.IsWall(newCoor) {
-				continue
-			}
-
-			var newState CurrentState
-			c.copy(&newState)
-
-			if c.LevelInfo.IsCellFree(newCoor, c) {
-				newState.Agents[agentIndex].Coordinates = newCoor
-				newState.Moves = append(newState.Moves, actions.Move(directionForCoordinates[coordIndex])...)
-				addStateToStatesToExplore(&nextStates, &newState, nodesInFrontier)
-
-				continue
-			}
-			// Check if the cell has a box that can be moved by this agent
-			if !newState.IsBoxAndCanMove(newCoor, agent.Letter) {
-				continue
-			}
-
-			expandBoxMoves(&newState, &nextStates, &newCoor, coordIndex, agentIndex, nodesInFrontier)
+	for coordIndex, move := range coordManipulation {
+		newCoor := Coordinates{agentCoor[0] + move[0], agentCoor[1] + move[1]}
+		if c.LevelInfo.IsWall(newCoor) {
+			continue
 		}
+
+		var newState CurrentState
+
+		c.copy(&newState)
+
+		if c.LevelInfo.IsCellFree(newCoor, c) {
+			newState.Agents[agentIndex].Coordinates = newCoor
+			newState.Moves = append(newState.Moves, actions.Move(directionForCoordinates[coordIndex])...)
+			addStateToStatesToExplore(&nextStates, &newState, nodesInFrontier)
+
+			continue
+		}
+		// Check if the cell has a box that can be moved by this agent
+		if !newState.IsBoxAndCanMove(newCoor, agent.Letter) {
+			continue
+		}
+
+		expandBoxMoves(&newState, &nextStates, &newCoor, coordIndex, agentIndex, nodesInFrontier)
 	}
 
 	wg.Wait()
@@ -144,12 +144,14 @@ func expandBoxMoves(state *CurrentState, nextStates *[]*CurrentState, boxCoorToM
 
 			agentCoor, boxCoor = cellToMoveInto, currentAgentCoord
 			boxDirection := directionForCoordinates[boxCoordIndex]
+
 			if isPush {
 				agentCoor, boxCoor = currentBoxCoor, agentCoor
 				boxDirection = coordToDirection(currentBoxCoor, boxCoor)
 			}
 
 			var copyOfState CurrentState
+
 			state.copy(&copyOfState)
 
 			moveAction := action(coordToDirection(currentAgentCoord, agentCoor), boxDirection)
@@ -168,22 +170,26 @@ func coordToDirection(oldCoord, newCoord Coordinates) actions.Direction {
 			return directionForCoordinates[i]
 		}
 	}
+
 	panic("Failed to find direction, this should never happen")
 }
 
 func calculateCost(newState *CurrentState, nodesVisited Visited) {
 	defer wg.Done()
+
 	if _, ok := nodesVisited[newState.GetID()]; !ok {
 		newState.CalculateCost()
 	}
-
 }
+
 func addStateToStatesToExplore(nextStates *[]*CurrentState, newState *CurrentState, nodesVisited Visited) {
 	wg.Add(1)
+
 	*nextStates = append(*nextStates, newState)
 
 	go calculateCost(newState, nodesVisited)
 }
+
 func (c *CurrentState) FindBoxAt(coord Coordinates) int {
 	for i, box := range c.Boxes {
 		if box.Coordinates == coord {
@@ -217,6 +223,7 @@ outer:
 
 	return true
 }
+
 func (c *CurrentState) IsBoxAndCanMove(coor Coordinates, agentChar byte) bool {
 	for _, box := range c.Boxes {
 		if box.Coordinates == coor {
@@ -230,6 +237,5 @@ func (c *CurrentState) IsBoxAndCanMove(coor Coordinates, agentChar byte) bool {
 func (c *CurrentState) CalculateCost() {
 	if c.Cost == 0 {
 		c.Cost = CalculateManhattanDistance(c)
-		// communication.Log(c.ID, c.Cost)
 	}
 }
