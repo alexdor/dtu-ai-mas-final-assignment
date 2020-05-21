@@ -19,7 +19,8 @@ type (
 )
 
 func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) actions.Action {
-	if len(os.Getenv("DEBUG")) > 0 {
+	isDebug := len(os.Getenv("DEBUG")) > 0
+	if isDebug {
 		time.Sleep(10 * time.Second)
 		communication.Log("Starting search")
 	}
@@ -38,10 +39,10 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 		queue.Remove(node)
 
 		if value.IsGoalState() {
-			communication.Log("FOUND GOAL")
-			communication.Log("Explored ", len(nodesVisited))
-			communication.Log("Moves", string(value.Moves))
-
+			if isDebug {
+				communication.Log("Goal was found after exploring ", len(nodesVisited), " states")
+				communication.Log("Moves", string(value.Moves))
+			}
 			return value.Moves
 		}
 
