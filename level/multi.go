@@ -111,14 +111,18 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents *[][]agentIntents) {
 	defer wg.Done()
 
-	localIntents := []agentIntents{}
-	agent := c.Agents[agentIndex]
-	agentCoor := agent.Coordinates
 	ending := actions.MultiAgentEnd
 
 	if agentIndex == len(*intents)-1 {
 		ending = actions.SingleAgentEnd
 	}
+
+	localIntents := []agentIntents{{
+		action: actions.NoOp(ending),
+	}}
+
+	agent := c.Agents[agentIndex]
+	agentCoor := agent.Coordinates
 
 	for coordIndex, move := range coordManipulation {
 		newCoor := Coordinates{agentCoor[0] + move[0], agentCoor[1] + move[1]}
@@ -140,13 +144,6 @@ func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents *[][]agen
 		}
 
 		expandMABoxMoves(c, &newCoor, coordIndex, agentIndex, &localIntents, ending)
-	}
-
-	// If no possible moves where found then add a noop
-	if len(localIntents) == 0 {
-		localIntents = append(localIntents, agentIntents{
-			action: actions.NoOp(ending),
-		})
 	}
 
 	exploreMutex.Lock()
