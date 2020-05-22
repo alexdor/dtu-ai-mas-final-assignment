@@ -22,12 +22,14 @@ type (
 	ID string
 
 	Info struct {
-		LevelInfo        map[string]string
-		GoalCount        int
-		AgentColor       SimpleMap
-		BoxColor         SimpleMap
-		WallsCoordinates CoordinatesLookup
-		GoalCoordinates  IntrestingCoordinates
+		LevelInfo              map[string]string
+		GoalCount              int
+		AgentColor             SimpleMap
+		BoxColor               SimpleMap
+		MaxCoord               Coordinates
+		WallsCoordinates       CoordinatesLookup
+		InGameWallsCoordinates CoordinatesLookup
+		GoalCoordinates        IntrestingCoordinates
 	}
 )
 
