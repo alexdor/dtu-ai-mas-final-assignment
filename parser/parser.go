@@ -3,6 +3,7 @@ package parser
 import (
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
 	"github.com/alexdor/dtu-ai-mas-final-assignment/config"
@@ -16,6 +17,7 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 	currentState := level.CurrentState{}
 	mode := ""
 	row := level.Point(0)
+	col := 0
 
 	for {
 		msg, err := communication.ReadNextMessages()
@@ -25,6 +27,10 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 		}
 
 		msg = strings.TrimSpace(msg)
+		if len(msg) > col {
+			col = len(msg)
+		}
+
 		// Handle mode switching
 		if strings.HasPrefix(msg, "#") {
 			msg = strings.TrimPrefix(msg, "#")
@@ -42,17 +48,43 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 		row++
 	}
 
+	levelInfo.MaxCoord = level.Coordinates{row, col}
+
 	// Make sure agents are sorted
 	sort.Slice(currentState.Agents, func(i, j int) bool {
 		return currentState.Agents[i].Letter < currentState.Agents[j].Letter
 	})
 
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
 	goalCount := 0
-	for _, v := range levelInfo.GoalCoordinates {
-		goalCount += len(v)
-	}
+
+	go func() {
+		defer wg.Done()
+
+		for _, v := range levelInfo.GoalCoordinates {
+			goalCount += len(v)
+		}
+	}()
+
+	inGameWalls := level.CoordinatesLookup{}
+
+	go func() {
+		defer wg.Done()
+
+		for key := range levelInfo.WallsCoordinates {
+			isEdgeWall := key[0] == 0 || key[1] == 0 || key[0] == levelInfo.MaxCoord[0] || key[1] == levelInfo.MaxCoord[1]
+			if !isEdgeWall {
+				inGameWalls[key] = struct{}{}
+			}
+		}
+	}()
+
+	wg.Wait()
 
 	levelInfo.GoalCount = goalCount
+	levelInfo.InGameWallsCoordinates = inGameWalls
 
 	return levelInfo, currentState, nil
 }
