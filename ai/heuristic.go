@@ -51,7 +51,7 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState, i
 		sort.Slice(childs, func(i int, j int) bool {
 			return childs[i].Cost < childs[j].Cost
 		})
-	outer:
+
 		for _, child := range childs {
 			// The only writer to the map (this happens after all goroutines are done)
 			// If the above changes, this is going to lead to a race condition
@@ -62,13 +62,17 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState, i
 				}
 				nodesVisited[child.ID] = struct{}{}
 				cost := child.Cost
-				if cost < el.Value.(level.CurrentState).Cost {
-					queue.InsertBefore(*child, el)
-					continue outer
-				}
-				el = el.Next()
-				if el == nil {
-					queue.PushBack(*child)
+				for {
+					if cost < el.Value.(level.CurrentState).Cost {
+						queue.InsertBefore(*child, el)
+						break
+					}
+
+					el = el.Next()
+					if el == nil {
+						queue.PushBack(*child)
+						break
+					}
 				}
 			}
 		}
