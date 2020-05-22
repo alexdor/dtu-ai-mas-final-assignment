@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/actions"
+	"github.com/panjf2000/ants/v2"
 )
 
 var (
@@ -27,7 +28,11 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 
 	for agentIndex := range c.Agents {
 		agentIndex := agentIndex
-		go c.figureOutAgentMovements(agentIndex, &intents)
+		err := ants.Submit(func() { c.figureOutAgentMovements(agentIndex, &intents) })
+		if err != nil {
+			panic(err)
+		}
+
 	}
 
 	nextStates := []*CurrentState{}
@@ -106,7 +111,10 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 
 					wg.Add(1)
 
-					go calculateCost(&newState, nodesInFrontier)
+					err := ants.Submit(func() { calculateCost(&newState, nodesInFrontier) })
+					if err != nil {
+						panic(err)
+					}
 				}
 			}
 		}

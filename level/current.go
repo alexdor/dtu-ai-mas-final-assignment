@@ -8,6 +8,7 @@ import (
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/actions"
 	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
+	"github.com/panjf2000/ants/v2"
 )
 
 var ErrFailedToFindBox = errors.New("Failed to find box")
@@ -186,7 +187,10 @@ func addStateToStatesToExplore(nextStates *[]*CurrentState, newState *CurrentSta
 
 	*nextStates = append(*nextStates, newState)
 
-	go calculateCost(newState, nodesVisited)
+	err := ants.Submit(func() { calculateCost(newState, nodesVisited) })
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (c *CurrentState) FindBoxAt(coord Coordinates) int {
