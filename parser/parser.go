@@ -81,7 +81,7 @@ func findCloserBox(coords level.Coordinates, char byte, boxes []level.NodeOrAgen
 			continue
 		}
 
-		cost := level.ManhattanPlusPlus(coords, box.Coordinates, state)
+		cost := level.ManhattanPlusPlus(coords, box.Coordinates)
 		if cost < minDist {
 			minDist = cost
 			pos = i

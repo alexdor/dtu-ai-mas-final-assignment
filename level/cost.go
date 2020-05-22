@@ -24,7 +24,7 @@ func CalculateManhattanDistance(currentState *CurrentState) int {
 		}
 		goal := goals[goalIndex]
 
-		distance += ManhattanPlusPlus(box.Coordinates, goal, currentState)
+		distance += ManhattanPlusPlus(box.Coordinates, goal)
 	}
 
 	return distance
@@ -38,13 +38,13 @@ func abs(x int) int {
 	return x
 }
 
-func ManhattanPlusPlus(first, second Coordinates, state *CurrentState) int {
-	diff := abs(first[0]-second[0]) + abs(first[1]-second[1])
-	if diff == 0 {
-		return 0
-	}
+func ManhattanPlusPlus(first, second Coordinates) int {
+	return abs(first[0]-second[0]) + abs(first[1]-second[1])
+	// if diff == 0 {
+	// 	return 0
+	// }
 
-	return diff + calculateWallsCost(first, second, state)
+	// return diff + calculateWallsCost(first, second, state)
 }
 
 func calculateWallsCost(boxCoordinates Coordinates, goalCoordinates Coordinates, currentState *CurrentState) int {
