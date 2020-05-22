@@ -25,6 +25,11 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 		communication.Log("Starting search")
 	}
 
+	expand := level.ExpandSingleAgent
+	if len(currentState.Agents) > 1 {
+		expand = level.ExpandMultiAgent
+	}
+
 	lenToAllocate := len(levelInfo.WallsCoordinates) / 2
 	nodesVisited := make(level.Visited, lenToAllocate)
 	// add the root node to the map of the visited nodes
@@ -47,7 +52,7 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 		}
 
 	outer:
-		for _, child := range value.ExpandSingleAgent(nodesVisited) {
+		for _, child := range expand(nodesVisited, &value) {
 			// The only writer to the map (this happens after all goroutines are done)
 			// If the above changes, this is going to lead to a race condition
 			if _, ok := nodesVisited[child.ID]; !ok {

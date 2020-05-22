@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
@@ -40,6 +41,18 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 		parseMode(mode, msg, row, &levelInfo, &currentState)
 		row++
 	}
+
+	// Make sure agents are sorted
+	sort.Slice(currentState.Agents, func(i, j int) bool {
+		return currentState.Agents[i].Letter < currentState.Agents[j].Letter
+	})
+
+	goalCount := 0
+	for _, v := range levelInfo.GoalCoordinates {
+		goalCount += len(v)
+	}
+
+	levelInfo.GoalCount = goalCount
 
 	return levelInfo, currentState, nil
 }
@@ -104,4 +117,5 @@ func parseMode(mode, msg string, row level.Point, levelInfo *level.Info, current
 	default:
 		levelInfo.LevelInfo[mode] = msg
 	}
+
 }

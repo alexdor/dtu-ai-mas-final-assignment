@@ -23,6 +23,7 @@ type (
 
 	Info struct {
 		LevelInfo        map[string]string
+		GoalCount        int
 		AgentColor       SimpleMap
 		BoxColor         SimpleMap
 		WallsCoordinates CoordinatesLookup

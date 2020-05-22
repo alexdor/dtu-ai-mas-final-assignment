@@ -17,7 +17,7 @@ var (
 	move Action = []byte("Move")
 	pull Action = []byte("Pull")
 	push Action = []byte("Push")
-	NoOp Action = []byte("NoOp")
+	noOp Action = []byte("NoOp")
 
 	North Direction = 'N'
 	West  Direction = 'W'
@@ -32,6 +32,10 @@ func Move(direction Direction, endWith byte) Action {
 	return append(move, '(', direction, ')', endWith)
 }
 
+func NoOp(endWith byte) Action {
+	return append(noOp, endWith)
+}
+
 type PullOrPush = func(agentDirection, boxDirecation Direction, endWith byte) Action
 
 func Pull(agentDirection, boxDirecation Direction, endWith byte) Action {
@@ -43,13 +47,12 @@ func Push(agentDirection, boxDirecation Direction, endWith byte) Action {
 }
 
 func ExecuteActions(actions Action) bool {
-	// TODO: Fix multi agent actions execution
 	for _, action := range strings.Split(string(actions), "\n") {
 		if len(action) == 0 {
 			continue
 		}
 
-		res, err := communication.SendMessage(action)
+		res, err := communication.SendMessage(strings.TrimRight(action, ";"))
 		if err != nil {
 			communication.Error(err)
 			return false
