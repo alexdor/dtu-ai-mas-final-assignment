@@ -103,7 +103,11 @@ func preproccessLvl(wg *sync.WaitGroup, levelInfo *level.Info, state *level.Curr
 
 		for char, goals := range levelInfo.GoalCoordinates {
 			for _, coord := range goals {
+
 				boxIndex := findCloserBox(coord, char, state.Boxes, assignedBoxes, state)
+				if boxIndex == -1 {
+					continue
+				}
 				assignedBoxes[boxIndex] = struct{}{}
 				(*boxGoalAssignment)[boxIndex] = coord
 			}
