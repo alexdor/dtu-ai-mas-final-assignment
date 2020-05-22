@@ -76,7 +76,6 @@ func (c *CurrentState) copy(newState *CurrentState) {
 
 }
 
-//TODO: Figure out multiagent
 func ExpandSingleAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState {
 	agentIndex := 0
 	agent := c.Agents[0]
