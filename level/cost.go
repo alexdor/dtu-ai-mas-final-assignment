@@ -7,7 +7,7 @@ type Cost interface {
 type ManhattanDistance struct{}
 
 func CalculateManhattanDistance(currentState *CurrentState) int {
-	distance := 0
+	aggregatedCost := 0
 
 	for i, box := range currentState.Boxes {
 		goals := currentState.LevelInfo.GoalCoordinates[box.Letter]
@@ -17,25 +17,16 @@ func CalculateManhattanDistance(currentState *CurrentState) int {
 			if goalCoordinates == currentState.LevelInfo.BoxGoalAssignment[i] {
 				goalIndex = j
 				break
-			}
-		}
+
 		if goalIndex == -1 {
 			continue
 		}
 		goal := goals[goalIndex]
 
-		distance += ManhattanPlusPlus(box.Coordinates, goal, currentState)
+		aggregatedCost += ManhattanPlusPlus(box.Coordinates, goal, currentState)
 	}
 
-	return distance
-}
-
-func abs(x int) int {
-	if x < 0 {
-		return -x
-	}
-
-	return x
+	return aggregatedCost
 }
 
 func ManhattanPlusPlus(first, second Coordinates, state *CurrentState) int {
@@ -44,7 +35,9 @@ func ManhattanPlusPlus(first, second Coordinates, state *CurrentState) int {
 		return 0
 	}
 
-	return diff + calculateWallsCost(first, second, state)
+	diff += calculateWallsCost(first, second, state)
+
+	return diff
 }
 
 func calculateWallsCost(boxCoordinates Coordinates, goalCoordinates Coordinates, currentState *CurrentState) int {
@@ -92,4 +85,12 @@ func calculateWallsCost(boxCoordinates Coordinates, goalCoordinates Coordinates,
 	cost /= (bigXcoord - smallXcoord) * (bigYcoord - smallYcoord)
 
 	return cost
+}
+
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+
+	return x
 }
