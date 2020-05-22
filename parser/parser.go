@@ -27,8 +27,8 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 		}
 
 		msg = strings.TrimSpace(msg)
-		if len(msg) > col {
-			col = len(msg)
+		if len(msg)-1 > col {
+			col = len(msg) - 1
 		}
 
 		// Handle mode switching
@@ -68,7 +68,7 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 		}
 	}()
 
-	inGameWalls := level.CoordinatesLookup{}
+	inGameWalls := []level.Coordinates{}
 
 	go func() {
 		defer wg.Done()
@@ -76,7 +76,7 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 		for key := range levelInfo.WallsCoordinates {
 			isEdgeWall := key[0] == 0 || key[1] == 0 || key[0] == levelInfo.MaxCoord[0] || key[1] == levelInfo.MaxCoord[1]
 			if !isEdgeWall {
-				inGameWalls[key] = struct{}{}
+				inGameWalls = append(inGameWalls, key)
 			}
 		}
 	}()

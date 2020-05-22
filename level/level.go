@@ -28,7 +28,7 @@ type (
 		BoxColor               SimpleMap
 		MaxCoord               Coordinates
 		WallsCoordinates       CoordinatesLookup
-		InGameWallsCoordinates CoordinatesLookup
+		InGameWallsCoordinates []Coordinates
 		GoalCoordinates        IntrestingCoordinates
 	}
 )
