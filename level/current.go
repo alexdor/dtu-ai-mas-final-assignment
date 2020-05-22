@@ -77,7 +77,7 @@ func (c *CurrentState) copy(newState *CurrentState) {
 }
 
 //TODO: Figure out multiagent
-func (c *CurrentState) ExpandSingleAgent(nodesInFrontier Visited) []*CurrentState {
+func ExpandSingleAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState {
 	agentIndex := 0
 	agent := c.Agents[0]
 	nextStates := []*CurrentState{}
@@ -208,10 +208,10 @@ outer:
 	for char, goal := range c.LevelInfo.GoalCoordinates {
 		for _, box := range c.Boxes {
 			if char == box.Letter {
-				goalCounter = 0
 				for _, coor := range goal {
 					if box.Coordinates == coor {
-						if goalCounter++; goalCounter == len(goal) {
+						goalCounter++
+						if goalCounter == c.LevelInfo.GoalCount {
 							continue outer
 						}
 					}
