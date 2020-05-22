@@ -1,6 +1,7 @@
 package level
 
 import (
+	"bytes"
 	"sync"
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/actions"
@@ -44,6 +45,7 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 		localIntents := make([][]agentIntents, len(mergedIntents)*len(intents[i]))
 
 		for mergeIndex, firstElement := range mergedIntents {
+		outer:
 			for currentIndex, secondElement := range intents[i] {
 				skipAppend = false
 
@@ -69,6 +71,18 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 				}
 				// If last intent calculate next states
 				if isLastIntent {
+					if bytes.Equal(secondElement.action, actions.NoOpAction) {
+						skip := true
+						for _, action := range firstElement {
+							if !bytes.Equal(action.action, actions.NoOpAction) {
+								skip = false
+								break
+							}
+						}
+						if skip {
+							continue outer
+						}
+					}
 					var newState CurrentState
 
 					c.copy(&newState)

@@ -14,10 +14,10 @@ type (
 )
 
 var (
-	move Action = []byte("Move")
-	pull Action = []byte("Pull")
-	push Action = []byte("Push")
-	noOp Action = []byte("NoOp")
+	move       Action = []byte("Move")
+	pull       Action = []byte("Pull")
+	push       Action = []byte("Push")
+	NoOpAction Action = []byte("NoOp")
 
 	North Direction = 'N'
 	West  Direction = 'W'
@@ -33,7 +33,7 @@ func Move(direction Direction, endWith byte) Action {
 }
 
 func NoOp(endWith byte) Action {
-	return append(noOp, endWith)
+	return append(NoOpAction, endWith)
 }
 
 type PullOrPush = func(agentDirection, boxDirecation Direction, endWith byte) Action

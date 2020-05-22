@@ -3,6 +3,7 @@ package ai
 import (
 	"container/list"
 	"os"
+	"sort"
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/actions"
 	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
@@ -44,21 +45,31 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState, i
 			return value.Moves
 		}
 
+		el := queue.Front()
+
+		childs := expand(nodesVisited, &value)
+		sort.Slice(childs, func(i int, j int) bool {
+			return childs[i].Cost < childs[j].Cost
+		})
 	outer:
-		for _, child := range expand(nodesVisited, &value) {
+		for _, child := range childs {
 			// The only writer to the map (this happens after all goroutines are done)
 			// If the above changes, this is going to lead to a race condition
 			if _, ok := nodesVisited[child.ID]; !ok {
+				if el == nil {
+					queue.PushBack(*child)
+					continue
+				}
 				nodesVisited[child.ID] = struct{}{}
 				cost := child.Cost
-
-				for el := queue.Front(); el != nil; el = el.Next() {
-					if cost < el.Value.(level.CurrentState).Cost {
-						queue.InsertBefore(*child, el)
-						continue outer
-					}
+				if cost < el.Value.(level.CurrentState).Cost {
+					queue.InsertBefore(*child, el)
+					continue outer
 				}
-				queue.PushBack(*child)
+				el = el.Next()
+				if el == nil {
+					queue.PushBack(*child)
+				}
 			}
 		}
 	}
