@@ -235,6 +235,6 @@ func (c *CurrentState) IsBoxAndCanMove(coor Coordinates, agentChar byte) bool {
 
 func (c *CurrentState) CalculateCost() {
 	if c.Cost == 0 {
-		c.Cost = CalculateManhattanDistance(c)
+		c.Cost = CalculateAggregatedCost(c)
 	}
 }
