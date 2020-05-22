@@ -1,9 +1,5 @@
 package level
 
-import (
-	"math"
-)
-
 type Cost interface {
 	Calculate(*CurrentState) int
 }
@@ -11,23 +7,22 @@ type Cost interface {
 type ManhattanDistance struct{}
 
 func CalculateManhattanDistance(currentState *CurrentState) int {
-	// TODO: preassign boxes to goals (by creating a rect)
 	distance := 0
 
-	for _, box := range currentState.Boxes {
-		min := math.MaxInt64
+	for i, box := range currentState.Boxes {
 		goals := currentState.LevelInfo.GoalCoordinates[box.Letter]
+		goalIndex := -1
 
-		for _, goalCoordinates := range goals {
-			cost := abs(box.Coordinates[0]-goalCoordinates[0]) + abs(box.Coordinates[1]-goalCoordinates[1])
-			cost += calculateWallsCost(box.Coordinates, goalCoordinates, currentState)
-
-			if cost < min {
-				min = cost
+		for j, goalCoordinates := range goals {
+			if goalCoordinates == currentState.LevelInfo.BoxGoalAssignment[i] {
+				goalIndex = j
+				break
 			}
 		}
 
-		distance += min
+		goal := goals[goalIndex]
+
+		distance += ManhattanPlusPlus(box.Coordinates, goal, currentState)
 	}
 
 	return distance
@@ -41,8 +36,16 @@ func abs(x int) int {
 	return x
 }
 
+func ManhattanPlusPlus(first, second Coordinates, state *CurrentState) int {
+	diff := abs(first[0]-second[0]) + abs(first[1]-second[1])
+	if diff == 0 {
+		return 0
+	}
+
+	return diff + calculateWallsCost(first, second, state)
+}
+
 func calculateWallsCost(boxCoordinates Coordinates, goalCoordinates Coordinates, currentState *CurrentState) int {
-	// TODO: Turn this to a percentage
 	wallPenaltySize := 4
 
 	isXcoordOfBoxSmallest := boxCoordinates[0] < goalCoordinates[0]

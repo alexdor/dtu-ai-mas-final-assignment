@@ -30,6 +30,7 @@ type (
 		WallsCoordinates       CoordinatesLookup
 		InGameWallsCoordinates []Coordinates
 		GoalCoordinates        IntrestingCoordinates
+		BoxGoalAssignment      []Coordinates
 	}
 )
 

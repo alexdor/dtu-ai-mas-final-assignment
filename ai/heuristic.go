@@ -3,7 +3,6 @@ package ai
 import (
 	"container/list"
 	"os"
-	"time"
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/actions"
 	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
@@ -12,19 +11,13 @@ import (
 
 type (
 	Heuristic interface {
-		Solve(*level.Info, *level.CurrentState) actions.Action
+		Solve(*level.Info, *level.CurrentState, bool) actions.Action
 	}
 
 	AStart struct{}
 )
 
-func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) actions.Action {
-	isDebug := len(os.Getenv("DEBUG")) > 0
-	if isDebug {
-		time.Sleep(10 * time.Second)
-		communication.Log("Starting search")
-	}
-
+func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState, isDebug bool) actions.Action {
 	expand := level.ExpandSingleAgent
 	if len(currentState.Agents) > 1 {
 		expand = level.ExpandMultiAgent

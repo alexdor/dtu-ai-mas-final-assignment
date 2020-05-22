@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"math"
 	"sort"
 	"strings"
 	"sync"
@@ -14,7 +15,7 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 	levelInfo := level.Info{}
 	levelInfo.Init()
 
-	currentState := level.CurrentState{}
+	currentState := level.CurrentState{LevelInfo: &levelInfo}
 	mode := ""
 	row := level.Point(0)
 	col := 0
@@ -55,20 +56,59 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 		return currentState.Agents[i].Letter < currentState.Agents[j].Letter
 	})
 
-	wg := sync.WaitGroup{}
-	wg.Add(2)
+	wg := &sync.WaitGroup{}
+	wg.Add(3)
 
 	goalCount := 0
+	inGameWalls := []level.Coordinates{}
+	boxGoalAssignment := make([]level.Coordinates, len(currentState.Boxes))
 
+	preproccessLvl(wg, &levelInfo, &currentState, &goalCount, &inGameWalls, &boxGoalAssignment)
+	wg.Wait()
+
+	levelInfo.GoalCount = goalCount
+	levelInfo.InGameWallsCoordinates = inGameWalls
+	levelInfo.BoxGoalAssignment = boxGoalAssignment
+
+	return levelInfo, currentState, nil
+}
+func findCloserBox(coords level.Coordinates, char byte, boxes []level.NodeOrAgent, assignedBoxes map[int]struct{}, state *level.CurrentState) int {
+	minDist := math.MaxInt64
+	pos := -1
+
+	for i, box := range boxes {
+		if _, ok := assignedBoxes[i]; ok || box.Letter != char {
+			continue
+		}
+
+		cost := level.ManhattanPlusPlus(coords, box.Coordinates, state)
+		if cost < minDist {
+			minDist = cost
+			pos = i
+		}
+	}
+
+	return pos
+}
+
+func preproccessLvl(wg *sync.WaitGroup, levelInfo *level.Info, state *level.CurrentState, goalCount *int, inGameWalls, boxGoalAssignment *[]level.Coordinates) {
 	go func() {
 		defer wg.Done()
 
-		for _, v := range levelInfo.GoalCoordinates {
-			goalCount += len(v)
+		for i := range *boxGoalAssignment {
+			(*boxGoalAssignment)[i] = level.Coordinates{-1, -1}
+		}
+
+		assignedBoxes := make(map[int]struct{})
+
+		for char, goals := range levelInfo.GoalCoordinates {
+			for _, coord := range goals {
+				boxIndex := findCloserBox(coord, char, state.Boxes, assignedBoxes, state)
+				assignedBoxes[boxIndex] = struct{}{}
+				(*boxGoalAssignment)[boxIndex] = coord
+			}
 		}
 	}()
-
-	inGameWalls := []level.Coordinates{}
 
 	go func() {
 		defer wg.Done()
@@ -76,17 +116,18 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 		for key := range levelInfo.WallsCoordinates {
 			isEdgeWall := key[0] == 0 || key[1] == 0 || key[0] == levelInfo.MaxCoord[0] || key[1] == levelInfo.MaxCoord[1]
 			if !isEdgeWall {
-				inGameWalls = append(inGameWalls, key)
+				*inGameWalls = append(*inGameWalls, key)
 			}
 		}
 	}()
+	go func() {
+		defer wg.Done()
 
-	wg.Wait()
+		for _, v := range levelInfo.GoalCoordinates {
+			*goalCount += len(v)
+		}
+	}()
 
-	levelInfo.GoalCount = goalCount
-	levelInfo.InGameWallsCoordinates = inGameWalls
-
-	return levelInfo, currentState, nil
 }
 
 func parseMode(mode, msg string, row level.Point, levelInfo *level.Info, currentState *level.CurrentState) {

@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"runtime/pprof"
 	"syscall"
+	"time"
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/ai"
 	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
@@ -17,6 +18,12 @@ import (
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 func main() {
+	isDebug := len(os.Getenv("DEBUG")) > 0
+	if isDebug {
+		time.Sleep(10 * time.Second)
+		communication.Log("Starting search")
+	}
+
 	flag.Parse()
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
@@ -44,12 +51,11 @@ func main() {
 	communication.Init()
 
 	levelInfo, currentState, err := parser.ParseLevel()
-	currentState.LevelInfo = &levelInfo
 
 	if err != nil {
 		communication.Error(err)
 		return
 	}
 
-	ai.Play(&levelInfo, &currentState, &ai.AStart{})
+	ai.Play(&levelInfo, &currentState, &ai.AStart{}, isDebug)
 }
