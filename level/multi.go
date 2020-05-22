@@ -30,21 +30,21 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 	}
 
 	nextStates := []*CurrentState{}
-	mergedIntents := [][]agentIntents{}
 	isLastIntent, isThereAConflict, skipAppend := false, false, false
 
 	wg.Wait()
+	mergedIntents := make([][]agentIntents, len(intents[0]))
 
-	for _, intent := range intents[0] {
-		mergedIntents = append(mergedIntents, []agentIntents{intent})
+	for i := 0; i < len(intents[0]); i++ {
+		mergedIntents[i] = []agentIntents{intents[0][i]}
 	}
 
 	for i := 1; i < len(intents); i++ {
 		isLastIntent = i == len(intents)-1
-		localIntents := [][]agentIntents{}
+		localIntents := make([][]agentIntents, len(mergedIntents)*len(intents[i]))
 
-		for _, firstElement := range mergedIntents {
-			for _, secondElement := range intents[i] {
+		for mergeIndex, firstElement := range mergedIntents {
+			for currentIndex, secondElement := range intents[i] {
 				skipAppend = false
 
 				if secondElement.agentNewCoor != noopIntent.agentNewCoor {
@@ -56,19 +56,16 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 							action.boxNewCoor == secondElement.boxNewCoor
 
 						if isThereAConflict {
-							localIntents = append(
-								localIntents,
-								[]agentIntents{action, noopIntent},
-								[]agentIntents{noopIntent, secondElement},
-							)
+							localIntents[mergeIndex+currentIndex] = []agentIntents{action, noopIntent}
+							localIntents = append(localIntents, []agentIntents{noopIntent, secondElement})
 
 							skipAppend = true
 						}
 					}
 				}
 
-				if skipAppend {
-					localIntents = append(localIntents, append(firstElement, secondElement))
+				if !skipAppend {
+					localIntents[mergeIndex+currentIndex] = append(firstElement, secondElement)
 				}
 				// If last intent calculate next states
 				if isLastIntent {
@@ -89,8 +86,8 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 					if secondElement.boxNewCoor != noopIntent.boxNewCoor {
 						newState.Boxes[secondElement.boxIndex].Coordinates = secondElement.boxNewCoor
 					}
+
 					newState.Moves = append(newState.Moves, secondElement.action...)
-					// TODO: Create state
 					nextStates = append(nextStates, &newState)
 
 					wg.Add(1)
@@ -99,7 +96,6 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 				}
 			}
 		}
-
 		mergedIntents = localIntents
 	}
 

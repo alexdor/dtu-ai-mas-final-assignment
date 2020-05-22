@@ -19,7 +19,9 @@ func CalculateManhattanDistance(currentState *CurrentState) int {
 				break
 			}
 		}
-
+		if goalIndex == -1 {
+			continue
+		}
 		goal := goals[goalIndex]
 
 		distance += ManhattanPlusPlus(box.Coordinates, goal, currentState)
