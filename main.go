@@ -13,11 +13,13 @@ import (
 	"github.com/alexdor/dtu-ai-mas-final-assignment/ai"
 	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
 	"github.com/alexdor/dtu-ai-mas-final-assignment/parser"
+	"github.com/panjf2000/ants/v2"
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 func main() {
+	defer ants.Release()
 	isDebug := len(os.Getenv("DEBUG")) > 0
 	if isDebug {
 		time.Sleep(10 * time.Second)
