@@ -72,7 +72,7 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 
 	return levelInfo, currentState, nil
 }
-func findCloserBox(coords level.Coordinates, char byte, boxes []level.NodeOrAgent, assignedBoxes map[int]struct{}, state *level.CurrentState) int {
+func findCloserBox(coords level.Coordinates, char byte, boxes []level.NodeOrAgent, assignedBoxes map[int]struct{}) int {
 	minDist := math.MaxInt64
 	pos := -1
 
@@ -103,7 +103,7 @@ func preproccessLvl(wg *sync.WaitGroup, levelInfo *level.Info, state *level.Curr
 
 		for char, goals := range levelInfo.GoalCoordinates {
 			for _, coord := range goals {
-				boxIndex := findCloserBox(coord, char, state.Boxes, assignedBoxes, state)
+				boxIndex := findCloserBox(coord, char, state.Boxes, assignedBoxes)
 				assignedBoxes[boxIndex] = struct{}{}
 				(*boxGoalAssignment)[boxIndex] = coord
 			}
