@@ -1,6 +1,10 @@
 const fs = require("fs");
 const { spawn } = require("child_process");
 const log = require("single-line-log").stdout;
+const mdTable = require("markdown-table");
+const github = require("@actions/github");
+const core = require("@actions/core");
+
 const argv = require("yargs")
   .option("timeout", {
     alias: "t",
@@ -135,16 +139,62 @@ function logStatus(status, isContinuousOutputSet) {
   log(logLine);
 }
 
+const resultsHeader = "🧾🧾🧾 The results are in 🧾🧾🧾";
+
 function printResults() {
   console.log("\n");
-  console.log("🧾🧾🧾 The results are in 🧾🧾🧾");
+  console.log(resultsHeader);
   const { total, solved, failed } = results;
   console.table({ total, solved, failed });
   console.table(results.levels);
 }
 
+function getResultsAsMarkdown() {
+  let res = `#### ${resultsHeader} \n\n Results for ${process.env.GITHUB_SHA}\n\n`;
+  const { total, solved, failed, levels } = results;
+  res += mdTable(
+    [
+      ["total", "solved", "failed"],
+      [total, solved, failed],
+    ],
+    { align: ["c", "c", "c"] }
+  );
+
+  res += "\n\n<details>\n<summary> Levels </summary>\n";
+  res += mdTable([Object.keys(levels[0]), ...levels.map(Object.values)], {
+    align: ["c", "c", "c", "c"],
+  });
+  res += "\n</details>";
+
+  return res;
+}
+
+function commentResultsOnPr() {
+  if (!process.env.CI) return;
+
+  try {
+    const github_token = core.getInput("GITHUB_TOKEN");
+    const { context } = github;
+
+    if (context.payload.pull_request == null) {
+      core.setFailed("No pull request found.");
+      return;
+    }
+    const octokit = new github.GitHub(github_token);
+
+    octokit.issues.createComment({
+      ...context.repo,
+      issue_number: context.payload.pull_request.number,
+      body: getResultsAsMarkdown(),
+    });
+  } catch (e) {
+    core.setFailed(e);
+  }
+}
+
 process.on("SIGINT", () => {
   printResults();
+  commentResultsOnPr();
   process.exit(2);
 });
 
@@ -153,6 +203,7 @@ process.on("exit", (code) => {
   if (isSigIntCode) return;
 
   printResults();
+  commentResultsOnPr();
 });
 
 main();

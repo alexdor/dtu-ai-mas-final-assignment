@@ -20,4 +20,6 @@ jobs:
       - name: 👷 Build go executable
         run: go build main.go
       - name: 🏃 Run forest run!
-        run: node runner.js -l levels/new_levels -c "./main" -t 180 -i MA
+        run: node runner.js -l levels/custom_levels/SASimple.lvl -c "./main" -t 180 -i MA
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
