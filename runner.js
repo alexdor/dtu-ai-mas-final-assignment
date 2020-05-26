@@ -29,7 +29,7 @@ const timeout = argv.timeout || 180;
 const levelsDir = argv.levels || "./levels";
 const command = argv.command || "java -cp target/classes: Client";
 const prefixToIgnore = argv.ignorePrefix;
-const shouldOutputContinuously = argv.outputMode === 'continuous';
+const shouldOutputContinuously = argv.outputMode === "continuous";
 
 const results = {
   total: 0,
@@ -39,9 +39,15 @@ const results = {
 };
 
 function main() {
-  const levels = fs
-    .readdirSync(levelsDir)
-    .filter((lvl) => !prefixToIgnore || !lvl.startsWith(prefixToIgnore));
+  let levels;
+  try {
+    levels = fs
+      .readdirSync(levelsDir)
+      .filter((lvl) => !prefixToIgnore || !lvl.startsWith(prefixToIgnore));
+  } catch {
+    levels = [levelsDir];
+  }
+
   results.total = levels.length;
 
   function runThatLevel(levelIndex) {
@@ -87,10 +93,13 @@ function main() {
       log.clear();
 
       if (!shouldOutputContinuously) {
-        logStatus({
-          ...results,
-          currentlvl: level,
-        }, shouldOutputContinuously);
+        logStatus(
+          {
+            ...results,
+            currentlvl: level,
+          },
+          shouldOutputContinuously
+        );
       }
 
       const isFinished = levelIndex === levels.length - 1;
@@ -103,11 +112,14 @@ function main() {
 
     const timer = setInterval(() => {
       count += 0.1;
-      logStatus({
-        ...results,
-        currentlvl: level,
-        time: count.toFixed(1),
-      }, shouldOutputContinuously);
+      logStatus(
+        {
+          ...results,
+          currentlvl: level,
+          time: count.toFixed(1),
+        },
+        shouldOutputContinuously
+      );
     }, 100);
   }
 
@@ -115,12 +127,8 @@ function main() {
 }
 
 function logStatus(status, isContinuousOutputSet) {
-  const runMessage = isContinuousOutputSet
-    ? 'Currently running'
-    : 'Just ran';
-  const timeMessage = isContinuousOutputSet
-    ? `[${status.time} s]`
-    : '';
+  const runMessage = isContinuousOutputSet ? "Currently running" : "Just ran";
+  const timeMessage = isContinuousOutputSet ? `[${status.time} s]` : "";
   let logLine = `🏃 ${runMessage} ${status.currentlvl} ${timeMessage}\n`;
   logLine += `✅ Number of solved levels ${status.solved}\n`;
   logLine += `❌ Number of failed levels ${status.failed}\n`;
