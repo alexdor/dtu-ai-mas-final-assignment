@@ -149,8 +149,8 @@ function printResults() {
   console.table(results.levels);
 }
 
-function getResultsAsMarkdown() {
-  let res = `#### ${resultsHeader} \n\n Results for ${process.env.GITHUB_SHA}\n\n`;
+function getResultsAsMarkdown(actionName) {
+  let res = `#### ${resultsHeader} \n\n Results for ${process.env.GITHUB_SHA}, from action ${actionName}\n\n`;
   const { total, solved, failed, levels } = results;
   res += mdTable(
     [
@@ -175,7 +175,7 @@ function commentResultsOnPr() {
   try {
     const github_token = core.getInput("GITHUB_TOKEN");
     const { context } = github;
-
+    console.log(JSON.stringify(context));
     if (context.payload.pull_request == null) {
       core.setFailed("No pull request found.");
       return;
@@ -185,7 +185,7 @@ function commentResultsOnPr() {
     octokit.issues.createComment({
       ...context.repo,
       issue_number: context.payload.pull_request.number,
-      body: getResultsAsMarkdown(),
+      body: getResultsAsMarkdown(context.action),
     });
   } catch (e) {
     core.setFailed(e);
