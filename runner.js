@@ -39,14 +39,12 @@ const results = {
 };
 
 function main() {
-  let levels;
+  let levels = [levelsDir];
   try {
     levels = fs
       .readdirSync(levelsDir)
       .filter((lvl) => !prefixToIgnore || !lvl.startsWith(prefixToIgnore));
-  } catch {
-    levels = [levelsDir];
-  }
+  } catch {}
 
   results.total = levels.length;
 
@@ -58,7 +56,7 @@ function main() {
       "-c",
       command,
       "-l",
-      `${levelsDir}/${level}`,
+      level !== levelsDir ? `${levelsDir}/${level}` : levelsDir,
       "-t",
       timeout,
     ]);
