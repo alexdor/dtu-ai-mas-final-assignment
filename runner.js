@@ -177,15 +177,17 @@ function commentResultsOnPr() {
     const { context } = github;
     const octokit = new github.GitHub(github_token);
 
-    octokit.issues.createComment({
-      ...context.repo,
-      issue_number: (
-        context.payload.issue ||
-        context.payload.pull_request ||
-        context.payload
-      ).number,
-      body: getResultsAsMarkdown(context.action),
-    });
+    octokit.issues
+      .createComment({
+        ...context.repo,
+        issue_number: (
+          context.payload.issue ||
+          context.payload.pull_request ||
+          context.payload
+        ).number,
+        body: getResultsAsMarkdown(context.action),
+      })
+      .then(console.log);
   } catch (e) {
     core.setFailed(e);
   }
