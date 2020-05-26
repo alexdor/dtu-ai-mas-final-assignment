@@ -179,7 +179,7 @@ function commentResultsOnPr() {
 
     octokit.issues.createComment({
       ...context.repo,
-      issue_number: context.payload.pull_request.number,
+      issue_number: context.issue.number,
       body: getResultsAsMarkdown(context.action),
     });
   } catch (e) {
