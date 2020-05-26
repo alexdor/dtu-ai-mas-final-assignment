@@ -175,11 +175,6 @@ function commentResultsOnPr() {
   try {
     const github_token = core.getInput("GITHUB_TOKEN");
     const { context } = github;
-    console.log(JSON.stringify(context));
-    if (context.payload.pull_request == null) {
-      core.setFailed("No pull request found.");
-      return;
-    }
     const octokit = new github.GitHub(github_token);
 
     octokit.issues.createComment({
