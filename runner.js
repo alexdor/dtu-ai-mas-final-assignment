@@ -173,7 +173,7 @@ function commentResultsOnPr() {
   if (!process.env.CI) return;
 
   try {
-    const github_token = core.getInput("GITHUB_TOKEN");
+    const github_token = process.env.GITHUB_TOKEN;
     const { context } = github;
     const octokit = new github.GitHub(github_token);
 
