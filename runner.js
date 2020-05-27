@@ -186,7 +186,8 @@ function commentResultsOnPr() {
       ).number,
       body: getResultsAsMarkdown(context.action),
     };
-    octokit.issues
+
+    return octokit.issues
       .createComment(commentParams)
       .then((res) => console.log(commentParams, res.status, res.data));
   } catch (e) {
@@ -195,8 +196,8 @@ function commentResultsOnPr() {
 }
 
 process.on("SIGINT", () => {
-  printResults();
   commentResultsOnPr();
+  printResults();
   process.exit(2);
 });
 
@@ -204,8 +205,8 @@ process.on("exit", (code) => {
   const isSigIntCode = code === 2;
   if (isSigIntCode) return;
 
-  printResults();
   commentResultsOnPr();
+  printResults();
 });
 
 main();
