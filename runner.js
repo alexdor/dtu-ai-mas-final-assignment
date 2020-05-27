@@ -186,6 +186,7 @@ function commentResultsOnPr() {
       ).number,
       body: getResultsAsMarkdown(context.action),
     };
+    console.log(context);
     console.log("params", commentParams);
     return octokit.issues
       .createComment(commentParams)
