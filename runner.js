@@ -186,18 +186,19 @@ function commentResultsOnPr() {
       ).number,
       body: getResultsAsMarkdown(context.action),
     };
-
+    console.log("params", commentParams);
     return octokit.issues
       .createComment(commentParams)
-      .then((res) => console.log(commentParams, res.status, res.data));
+      .then((res) => console.log(res.status, res.data))
+      .catch((e) => core.setFailed(e));
   } catch (e) {
     core.setFailed(e);
   }
 }
 
 process.on("SIGINT", () => {
-  commentResultsOnPr();
   printResults();
+  commentResultsOnPr();
   process.exit(2);
 });
 
@@ -205,8 +206,8 @@ process.on("exit", (code) => {
   const isSigIntCode = code === 2;
   if (isSigIntCode) return;
 
-  commentResultsOnPr();
   printResults();
+  commentResultsOnPr();
 });
 
 main();
