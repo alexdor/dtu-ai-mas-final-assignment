@@ -160,7 +160,7 @@ function getResultsAsMarkdown(actionName) {
     ],
     { align: ["c", "c", "c"] }
   );
-
+  res += "\n\n";
   res += mdTable([Object.keys(levels[0]), ...levels.map(Object.values)], {
     align: ["c", "c", "c", "c"],
   });
