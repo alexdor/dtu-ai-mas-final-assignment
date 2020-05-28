@@ -2,7 +2,7 @@ const fs = require("fs");
 const { spawn } = require("child_process");
 const log = require("single-line-log").stdout;
 const mdTable = require("markdown-table");
-const github = require("@actions/github");
+const { context, GitHub } = require("@actions/github");
 const core = require("@actions/core");
 
 const argv = require("yargs")
@@ -174,10 +174,10 @@ async function commentResultsOnPr() {
 
   try {
     const github_token = process.env.GITHUB_TOKEN;
-    const { context } = github;
-    const octokit = new github.GitHub(github_token);
+    const octokit = new GitHub(github_token);
 
     console.log(context.issue.number, context);
+    console.log(process.env);
     const pullRequestNumbers = await octokit.pulls
       .list({
         ...context.repo,
