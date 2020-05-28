@@ -193,7 +193,7 @@ function commentResultsOnPr() {
 
 process.on("SIGINT", async () => {
   printResults();
-  commentResultsOnPr();
+  await commentResultsOnPr();
   process.exit(2);
 });
 
@@ -202,7 +202,7 @@ process.on("exit", async (code) => {
   if (isSigIntCode) return;
 
   printResults();
-  commentResultsOnPr();
+  await commentResultsOnPr();
 });
 
 main();
