@@ -1,6 +1,10 @@
 const fs = require("fs");
 const { spawn } = require("child_process");
 const log = require("single-line-log").stdout;
+const mdTable = require("markdown-table");
+const { context, GitHub } = require("@actions/github");
+const core = require("@actions/core");
+
 const argv = require("yargs")
   .option("timeout", {
     alias: "t",
@@ -29,7 +33,7 @@ const timeout = argv.timeout || 180;
 const levelsDir = argv.levels || "./levels";
 const command = argv.command || "java -cp target/classes: Client";
 const prefixToIgnore = argv.ignorePrefix;
-const shouldOutputContinuously = argv.outputMode === 'continuous';
+const shouldOutputContinuously = argv.outputMode === "continuous";
 
 const results = {
   total: 0,
@@ -39,9 +43,13 @@ const results = {
 };
 
 function main() {
-  const levels = fs
-    .readdirSync(levelsDir)
-    .filter((lvl) => !prefixToIgnore || !lvl.startsWith(prefixToIgnore));
+  let levels = [levelsDir];
+  try {
+    levels = fs
+      .readdirSync(levelsDir)
+      .filter((lvl) => !prefixToIgnore || !lvl.startsWith(prefixToIgnore));
+  } catch {}
+
   results.total = levels.length;
 
   function runThatLevel(levelIndex) {
@@ -52,7 +60,7 @@ function main() {
       "-c",
       command,
       "-l",
-      `${levelsDir}/${level}`,
+      level !== levelsDir ? `${levelsDir}/${level}` : levelsDir,
       "-t",
       timeout,
     ]);
@@ -69,9 +77,10 @@ function main() {
       if (shouldOutputContinuously) clearInterval(timer);
 
       const isSuccessCode = code === 0;
-      if (!isSuccessCode) process.exit();
 
-      solved = childOutput.includes("[server][info] Level solved: Yes.");
+      solved =
+        isSuccessCode &&
+        childOutput.includes("[server][info] Level solved: Yes.");
 
       solved ? results.solved++ : results.failed++;
 
@@ -87,10 +96,13 @@ function main() {
       log.clear();
 
       if (!shouldOutputContinuously) {
-        logStatus({
-          ...results,
-          currentlvl: level,
-        }, shouldOutputContinuously);
+        logStatus(
+          {
+            ...results,
+            currentlvl: level,
+          },
+          shouldOutputContinuously
+        );
       }
 
       const isFinished = levelIndex === levels.length - 1;
@@ -103,11 +115,14 @@ function main() {
 
     const timer = setInterval(() => {
       count += 0.1;
-      logStatus({
-        ...results,
-        currentlvl: level,
-        time: count.toFixed(1),
-      }, shouldOutputContinuously);
+      logStatus(
+        {
+          ...results,
+          currentlvl: level,
+          time: count.toFixed(1),
+        },
+        shouldOutputContinuously
+      );
     }, 100);
   }
 
@@ -115,12 +130,8 @@ function main() {
 }
 
 function logStatus(status, isContinuousOutputSet) {
-  const runMessage = isContinuousOutputSet
-    ? 'Currently running'
-    : 'Just ran';
-  const timeMessage = isContinuousOutputSet
-    ? `[${status.time} s]`
-    : '';
+  const runMessage = isContinuousOutputSet ? "Currently running" : "Just ran";
+  const timeMessage = isContinuousOutputSet ? `[${status.time} s]` : "";
   let logLine = `🏃 ${runMessage} ${status.currentlvl} ${timeMessage}\n`;
   logLine += `✅ Number of solved levels ${status.solved}\n`;
   logLine += `❌ Number of failed levels ${status.failed}\n`;
@@ -129,24 +140,66 @@ function logStatus(status, isContinuousOutputSet) {
   log(logLine);
 }
 
+const resultsHeader = "🧾🧾🧾 The results are in 🧾🧾🧾";
+
 function printResults() {
   console.log("\n");
-  console.log("🧾🧾🧾 The results are in 🧾🧾🧾");
+  console.log(resultsHeader);
   const { total, solved, failed } = results;
   console.table({ total, solved, failed });
   console.table(results.levels);
 }
 
-process.on("SIGINT", () => {
-  printResults();
+function getResultsAsMarkdown(actionName) {
+  let res = `#### ${resultsHeader} \n\n Results for ${process.env.GITHUB_SHA}, from action ${actionName}\n\n`;
+  const { total, solved, failed, levels } = results;
+  res += mdTable(
+    [
+      ["total", "solved", "failed"],
+      [total, solved, failed],
+    ],
+    { align: ["c", "c", "c"] }
+  );
+  res += "\n\n";
+  res += mdTable([Object.keys(levels[0]), ...levels.map(Object.values)], {
+    align: ["c", "c", "c", "c"],
+  });
+
+  return res;
+}
+
+function commentResultsOnPr() {
+  if (!process.env.CI) return;
+
+  const github_token = process.env.GITHUB_TOKEN;
+  const octokit = new GitHub(github_token);
+
+  return octokit.issues.createComment({
+    ...context.repo,
+    issue_number: (context.payload.pull_request || context.payload).number,
+    body: getResultsAsMarkdown(context.workflow),
+  });
+}
+let runCleanup = true;
+async function cleanup() {
+  if (!runCleanup) {
+    return;
+  }
+
+  runCleanup = false;
+  try {
+    printResults();
+    await commentResultsOnPr();
+  } catch (e) {
+    core.setFailed(e);
+  }
+}
+
+process.on("SIGINT", async () => {
+  cleanup();
   process.exit(2);
 });
 
-process.on("exit", (code) => {
-  const isSigIntCode = code === 2;
-  if (isSigIntCode) return;
-
-  printResults();
-});
+process.on("beforeExit", cleanup);
 
 main();
