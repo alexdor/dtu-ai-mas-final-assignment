@@ -23,4 +23,3 @@ jobs:
         run: node runner.js -l levels/custom_levels/SASimple.lvl -c "./main" -t 180 -i MA
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}

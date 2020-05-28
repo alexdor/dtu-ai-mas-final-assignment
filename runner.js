@@ -169,36 +169,21 @@ function getResultsAsMarkdown(actionName) {
   return res;
 }
 
-async function commentResultsOnPr() {
+function commentResultsOnPr() {
   if (!process.env.CI) return;
 
   try {
     const github_token = process.env.GITHUB_TOKEN;
     const octokit = new GitHub(github_token);
 
-    console.log(context.issue.number, context);
-    console.log(process.env);
-    const pullRequestNumbers = await octokit.pulls
-      .list({
+    return octokit.issues
+      .createComment({
         ...context.repo,
-        state: "open",
-        head: context.ref,
+        issue_number: context.payload.pull_request.number,
+        body: getResultsAsMarkdown(context.action),
       })
-      .then((res) => console.log(res) || res.data.map((d) => d.number))
+      .then((res) => console.log(res.status, res.data))
       .catch((e) => core.setFailed(e));
-    console.log(pullRequestNumbers);
-    return await Promise.all(
-      pullRequestNumbers.map((number) =>
-        octokit.issues
-          .createComment({
-            ...context.repo,
-            issue_number: number,
-            body: getResultsAsMarkdown(context.action),
-          })
-          .then((res) => console.log(res.status, res.data))
-          .catch((e) => core.setFailed(e))
-      )
-    );
   } catch (e) {
     core.setFailed(e);
   }
@@ -206,7 +191,7 @@ async function commentResultsOnPr() {
 
 process.on("SIGINT", async () => {
   printResults();
-  await commentResultsOnPr();
+  commentResultsOnPr();
   process.exit(2);
 });
 
@@ -215,7 +200,7 @@ process.on("exit", async (code) => {
   if (isSigIntCode) return;
 
   printResults();
-  await commentResultsOnPr();
+  commentResultsOnPr();
 });
 
 main();

@@ -1,5 +1,5 @@
 name: 🏃 (Multi)
-on: push
+on: pull_requesth
 jobs:
   run-forest-run:
     name: Build and run (multi)
