@@ -169,7 +169,7 @@ function getResultsAsMarkdown(actionName) {
   return res;
 }
 
-function commentResultsOnPr() {
+async function commentResultsOnPr() {
   if (!process.env.CI) return;
 
   try {
@@ -177,22 +177,28 @@ function commentResultsOnPr() {
     const { context } = github;
     const octokit = new github.GitHub(github_token);
 
-    const commentParams = {
-      ...context.repo,
-      issue_number: (
-        context.payload.issue ||
-        context.payload.pull_request ||
-        context.payload
-      ).number,
-      body: getResultsAsMarkdown(context.action),
-    };
-    console.log(process.env);
-    console.log(context);
-    console.log("params", commentParams);
-    return octokit.issues
-      .createComment(commentParams)
-      .then((res) => console.log(res.status, res.data))
+    const pullRequestNumber = await octokit.pulls
+      .list({
+        ...context.repo,
+        state: "open",
+        head: context.ref,
+      })
+      .then((res) => console.log(res) || res.data.map((d) => d.number))
       .catch((e) => core.setFailed(e));
+
+    console.log(context.issue.number, context);
+    return await Promise.all(
+      pullRequestNumber.map((number) =>
+        octokit.issues
+          .createComment({
+            ...context.repo,
+            issue_number: number,
+            body: getResultsAsMarkdown(context.action),
+          })
+          .then((res) => console.log(res.status, res.data))
+          .catch((e) => core.setFailed(e))
+      )
+    );
   } catch (e) {
     core.setFailed(e);
   }
