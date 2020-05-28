@@ -176,10 +176,10 @@ function commentResultsOnPr() {
     const github_token = process.env.GITHUB_TOKEN;
     const octokit = new GitHub(github_token);
 
-    return octokit.issues
+    return octokit.pulls
       .createComment({
         ...context.repo,
-        issue_number: context.payload.pull_request.number,
+        pull_number: (context.payload.pull_request || context.payload).number,
         body: getResultsAsMarkdown(context.action),
       })
       .then((res) => console.log(res.status, res.data))
