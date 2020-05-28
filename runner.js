@@ -204,18 +204,18 @@ async function commentResultsOnPr() {
   }
 }
 
-process.on("SIGINT", () => {
+process.on("SIGINT", async () => {
   printResults();
-  commentResultsOnPr();
+  await commentResultsOnPr();
   process.exit(2);
 });
 
-process.on("exit", (code) => {
+process.on("exit", async (code) => {
   const isSigIntCode = code === 2;
   if (isSigIntCode) return;
 
   printResults();
-  commentResultsOnPr();
+  await commentResultsOnPr();
 });
 
 main();
