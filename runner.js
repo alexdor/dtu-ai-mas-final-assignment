@@ -176,12 +176,10 @@ function commentResultsOnPr() {
   const github_token = process.env.GITHUB_TOKEN;
   const octokit = new GitHub(github_token);
 
-  return octokit.pulls.createComment({
+  return octokit.issues.createComment({
     ...context.repo,
-    pull_number: (context.payload.pull_request || context.payload).number,
+    issue_number: (context.payload.pull_request || context.payload).number,
     body: getResultsAsMarkdown(context.action),
-    commit_id: context.sha,
-    path: context.ref,
   });
 }
 let runCleanup = true;
