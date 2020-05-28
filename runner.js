@@ -172,28 +172,26 @@ function getResultsAsMarkdown(actionName) {
 function commentResultsOnPr() {
   if (!process.env.CI) return;
 
-  try {
-    const github_token = process.env.GITHUB_TOKEN;
-    const octokit = new GitHub(github_token);
+  const github_token = process.env.GITHUB_TOKEN;
+  const octokit = new GitHub(github_token);
 
-    return octokit.pulls
-      .createComment({
-        ...context.repo,
-        pull_number: (context.payload.pull_request || context.payload).number,
-        body: getResultsAsMarkdown(context.action),
-        commit_id: context.sha,
-        path: context.ref,
-      })
-      .then((res) => console.log(res.status, res.data))
-      .catch((e) => core.setFailed(e));
-  } catch (e) {
-    core.setFailed(e);
-  }
+  return octokit.pulls.createComment({
+    ...context.repo,
+    pull_number: (context.payload.pull_request || context.payload).number,
+    body: getResultsAsMarkdown(context.action),
+    commit_id: context.sha,
+    path: context.ref,
+  });
 }
 
 process.on("SIGINT", async () => {
-  printResults();
-  await commentResultsOnPr();
+  try {
+    printResults();
+    await commentResultsOnPr();
+    console.log(context);
+  } catch (e) {
+    core.setFailed(e);
+  }
   process.exit(2);
 });
 
@@ -201,8 +199,12 @@ process.on("exit", async (code) => {
   const isSigIntCode = code === 2;
   if (isSigIntCode) return;
 
-  printResults();
-  await commentResultsOnPr();
+  try {
+    printResults();
+    await commentResultsOnPr();
+  } catch (e) {
+    core.setFailed(e);
+  }
 });
 
 main();
