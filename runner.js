@@ -184,8 +184,14 @@ function commentResultsOnPr() {
     path: context.ref,
   });
 }
-
+let runCleanup = true;
 async function cleanup() {
+  console.log(context);
+  if (!runCleanup) {
+    return;
+  }
+
+  runCleanup = false;
   try {
     printResults();
     await commentResultsOnPr();
