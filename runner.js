@@ -181,6 +181,7 @@ function commentResultsOnPr() {
         ...context.repo,
         pull_number: (context.payload.pull_request || context.payload).number,
         body: getResultsAsMarkdown(context.action),
+        commit_id: context.sha,
       })
       .then((res) => console.log(res.status, res.data))
       .catch((e) => core.setFailed(e));
