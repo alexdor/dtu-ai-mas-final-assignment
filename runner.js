@@ -188,7 +188,6 @@ process.on("SIGINT", async () => {
   try {
     printResults();
     await commentResultsOnPr();
-    console.log(context);
   } catch (e) {
     core.setFailed(e);
   }
@@ -201,7 +200,8 @@ process.on("exit", async (code) => {
 
   try {
     printResults();
-    await commentResultsOnPr();
+    const res = await commentResultsOnPr();
+    console.log(context, res);
   } catch (e) {
     core.setFailed(e);
   }
