@@ -77,9 +77,10 @@ function main() {
       if (shouldOutputContinuously) clearInterval(timer);
 
       const isSuccessCode = code === 0;
-      if (!isSuccessCode) process.exit();
 
-      solved = childOutput.includes("[server][info] Level solved: Yes.");
+      solved =
+        isSuccessCode &&
+        childOutput.includes("[server][info] Level solved: Yes.");
 
       solved ? results.solved++ : results.failed++;
 
@@ -184,27 +185,20 @@ function commentResultsOnPr() {
   });
 }
 
-process.on("SIGINT", async () => {
+async function cleanup() {
   try {
     printResults();
     await commentResultsOnPr();
   } catch (e) {
     core.setFailed(e);
   }
+}
+
+process.on("SIGINT", async () => {
+  cleanup();
   process.exit(2);
 });
 
-process.on("exit", async (code) => {
-  const isSigIntCode = code === 2;
-  if (isSigIntCode) return;
-
-  try {
-    printResults();
-    const res = await commentResultsOnPr();
-    console.log(context, res);
-  } catch (e) {
-    core.setFailed(e);
-  }
-});
+process.on("beforeExit", cleanup);
 
 main();
