@@ -161,11 +161,9 @@ function getResultsAsMarkdown(actionName) {
     { align: ["c", "c", "c"] }
   );
 
-  res += "\n\n<details>\n<summary> Levels </summary>\n";
   res += mdTable([Object.keys(levels[0]), ...levels.map(Object.values)], {
     align: ["c", "c", "c", "c"],
   });
-  res += "\n</details>";
 
   return res;
 }
@@ -179,12 +177,11 @@ function commentResultsOnPr() {
   return octokit.issues.createComment({
     ...context.repo,
     issue_number: (context.payload.pull_request || context.payload).number,
-    body: getResultsAsMarkdown(context.action),
+    body: getResultsAsMarkdown(context.workflow),
   });
 }
 let runCleanup = true;
 async function cleanup() {
-  console.log(context);
   if (!runCleanup) {
     return;
   }
