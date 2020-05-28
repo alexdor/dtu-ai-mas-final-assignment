@@ -177,7 +177,8 @@ async function commentResultsOnPr() {
     const { context } = github;
     const octokit = new github.GitHub(github_token);
 
-    const pullRequestNumber = await octokit.pulls
+    console.log(context.issue.number, context);
+    const pullRequestNumbers = await octokit.pulls
       .list({
         ...context.repo,
         state: "open",
@@ -185,10 +186,9 @@ async function commentResultsOnPr() {
       })
       .then((res) => console.log(res) || res.data.map((d) => d.number))
       .catch((e) => core.setFailed(e));
-
-    console.log(context.issue.number, context);
+    console.log(pullRequestNumbers);
     return await Promise.all(
-      pullRequestNumber.map((number) =>
+      pullRequestNumbers.map((number) =>
         octokit.issues
           .createComment({
             ...context.repo,
