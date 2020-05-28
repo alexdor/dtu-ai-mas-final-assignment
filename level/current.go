@@ -204,20 +204,20 @@ func (c *CurrentState) FindBoxAt(coord Coordinates) int {
 func (c *CurrentState) IsGoalState() bool {
 	goalCounter := 0
 outer:
-	for char, goal := range c.LevelInfo.GoalCoordinates {
-		for _, box := range c.Boxes {
-			if char == box.Letter {
-				for _, coor := range goal {
-					if box.Coordinates == coor {
-						goalCounter++
-						if goalCounter == c.LevelInfo.GoalCount {
-							continue outer
-						}
+	for goalChar, goal := range c.LevelInfo.GoalCoordinates {
+	inner:
+		for _, goalCoor := range goal {
+			for _, box := range c.Boxes {
+				if goalChar == box.Letter && box.Coordinates == goalCoor {
+					goalCounter++
+					if goalCounter == c.LevelInfo.GoalCount {
+						break outer
 					}
+					continue inner
 				}
 			}
+			return false
 		}
-		return false
 	}
 
 	return true
