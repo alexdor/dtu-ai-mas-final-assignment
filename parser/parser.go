@@ -102,7 +102,8 @@ func preproccessLvl(levelInfo *level.Info, state *level.CurrentState) {
 		}
 
 		if !isBoxColorMoveable {
-			removeBoxOrAgent(state.Boxes, boxIndex)
+			levelInfo.WallsCoordinates[box.Coordinates] = struct{}{}
+			state.Boxes = removeBoxOrAgent(state.Boxes, boxIndex)
 		}
 	}
 
@@ -125,6 +126,7 @@ func preproccessLvl(levelInfo *level.Info, state *level.CurrentState) {
 					continue
 				}
 				assignedBoxes[boxIndex] = struct{}{}
+
 				boxGoalAssignment[boxIndex] = coord
 			}
 		}
