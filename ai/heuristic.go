@@ -16,7 +16,14 @@ type (
 	}
 
 	AStart struct{}
+
+	StateChildren []*level.CurrentState
 )
+
+// Sort interface implementation
+func (s StateChildren) Less(i, j int) bool { return s[i].Cost < s[j].Cost }
+func (s StateChildren) Len() int           { return len(s) }
+func (s StateChildren) Swap(i, j int)      { *s[i], *s[j] = *s[j], *s[i] }
 
 func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState, isDebug bool) actions.Action {
 	expand := level.ExpandSingleAgent
@@ -47,12 +54,10 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState, i
 
 		el := queue.Front()
 
-		childs := expand(nodesVisited, &value)
-		sort.Slice(childs, func(i int, j int) bool {
-			return childs[i].Cost < childs[j].Cost
-		})
+		children := expand(nodesVisited, &value)
+		sort.Sort(StateChildren(children))
 
-		for _, child := range childs {
+		for _, child := range children {
 			// The only writer to the map (this happens after all goroutines are done)
 			// If the above changes, this is going to lead to a race condition
 			if _, ok := nodesVisited[child.ID]; !ok {
