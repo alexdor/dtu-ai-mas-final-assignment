@@ -10,7 +10,11 @@ func CalculateAggregatedCost(currentState *CurrentState) int {
 	aggregatedCost := 0
 
 	for i, box := range currentState.Boxes {
-		goals := currentState.LevelInfo.GoalCoordinates[box.Letter]
+		goals, ok := currentState.LevelInfo.GoalCoordinates[box.Letter]
+		if !ok {
+			continue
+		}
+
 		goalIndex := -1
 
 		for j, goalCoordinates := range goals {
