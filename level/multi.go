@@ -29,7 +29,7 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 	}
 
 	nextStates := []*CurrentState{}
-	isLastIntent, isThereAConflict, skipAppend := false, false, false
+	isLastIntent, hasConflict, skipAppend := false, false, false
 
 	wg.Wait()
 	mergedIntents := make([][]agentIntents, len(intents[0]))
@@ -40,24 +40,23 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 
 	for i := 1; i < len(intents); i++ {
 		isLastIntent = i == len(intents)-1
-		localIntents := make([][]agentIntents, len(mergedIntents)*len(intents[i]))
+		localIntents := [][]agentIntents{}
 
-		for mergeIndex, firstElement := range mergedIntents {
+		for _, firstElement := range mergedIntents {
 		outer:
-			for currentIndex, secondElement := range intents[i] {
+			for _, secondElement := range intents[i] {
 				skipAppend = false
 
 				if secondElement.agentNewCoor != noopIntent.agentNewCoor {
 					// Check if there is a conflict
 					for _, action := range firstElement {
-						isThereAConflict = action.agentNewCoor == secondElement.agentNewCoor ||
+						hasConflict = action.agentNewCoor == secondElement.agentNewCoor ||
 							action.agentNewCoor == secondElement.boxNewCoor ||
 							action.boxNewCoor == secondElement.agentNewCoor ||
 							action.boxNewCoor == secondElement.boxNewCoor
 
-						if isThereAConflict {
-							localIntents[mergeIndex+currentIndex] = []agentIntents{action, noopIntent}
-							localIntents = append(localIntents, []agentIntents{noopIntent, secondElement})
+						if hasConflict {
+							localIntents = append(localIntents, []agentIntents{action, noopIntent}, []agentIntents{noopIntent, secondElement})
 
 							skipAppend = true
 						}
@@ -65,8 +64,9 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 				}
 
 				if !skipAppend {
-					localIntents[mergeIndex+currentIndex] = append(firstElement, secondElement)
+					localIntents = append(localIntents, append(firstElement, secondElement))
 				}
+
 				// If last intent calculate next states
 				if isLastIntent {
 					if bytes.Equal(secondElement.action, actions.NoOpAction) {
@@ -81,6 +81,7 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 							continue outer
 						}
 					}
+
 					var newState CurrentState
 
 					c.copy(&newState)
@@ -100,6 +101,7 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 					}
 
 					newState.Moves = append(newState.Moves, secondElement.action...)
+					newState.Moves = append(newState.Moves, actions.SingleAgentEnd)
 					nextStates = append(nextStates, &newState)
 
 					wg.Add(1)
@@ -119,15 +121,7 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents [][]agentIntents) {
 	defer wg.Done()
 
-	ending := actions.MultiAgentEnd
-
-	if agentIndex == len(intents)-1 {
-		ending = actions.SingleAgentEnd
-	}
-
-	localIntents := []agentIntents{{
-		action: actions.NoOp(ending),
-	}}
+	localIntents := []agentIntents{}
 
 	agent := c.Agents[agentIndex]
 	agentCoor := agent.Coordinates
@@ -140,7 +134,7 @@ func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents [][]agent
 
 		if c.LevelInfo.IsCellFree(newCoor, c) {
 			localIntents = append(localIntents, agentIntents{
-				action:       actions.Move(directionForCoordinates[coordIndex], ending),
+				action:       actions.Move(directionForCoordinates[coordIndex], actions.MultiAgentEnd),
 				agentNewCoor: newCoor,
 			})
 
@@ -151,13 +145,13 @@ func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents [][]agent
 			continue
 		}
 
-		expandMABoxMoves(c, &newCoor, coordIndex, agentIndex, &localIntents, ending)
+		expandMABoxMoves(c, &newCoor, coordIndex, agentIndex, &localIntents)
 	}
 
 	intents[agentIndex] = localIntents
 }
 
-func expandMABoxMoves(state *CurrentState, boxCoorToMove *Coordinates, boxCoordIndex, agentIndex int, localIntents *[]agentIntents, ending byte) {
+func expandMABoxMoves(state *CurrentState, boxCoorToMove *Coordinates, boxCoordIndex, agentIndex int, localIntents *[]agentIntents) {
 	// Prealloc variables
 	var (
 		isPush bool
@@ -195,7 +189,7 @@ func expandMABoxMoves(state *CurrentState, boxCoorToMove *Coordinates, boxCoordI
 			}
 
 			*localIntents = append(*localIntents, agentIntents{
-				action:       action(coordToDirection(currentAgentCoord, agentCoor), boxDirection, ending),
+				action:       action(coordToDirection(currentAgentCoord, agentCoor), boxDirection, actions.MultiAgentEnd),
 				agentNewCoor: agentCoor,
 				boxNewCoor:   boxCoor,
 				boxIndex:     boxIndex,
