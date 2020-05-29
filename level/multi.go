@@ -2,14 +2,12 @@ package level
 
 import (
 	"bytes"
-	"sync"
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/actions"
 )
 
 var (
-	exploreMutex = sync.Mutex{}
-	noopIntent   = agentIntents{action: actions.NoOp(actions.MultiAgentEnd)}
+	noopIntent = agentIntents{action: actions.NoOp(actions.MultiAgentEnd)}
 )
 
 type agentIntents struct {
@@ -27,7 +25,7 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 
 	for agentIndex := range c.Agents {
 		agentIndex := agentIndex
-		go c.figureOutAgentMovements(agentIndex, &intents)
+		go c.figureOutAgentMovements(agentIndex, intents)
 	}
 
 	nextStates := []*CurrentState{}
@@ -118,12 +116,12 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 	return nextStates
 }
 
-func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents *[][]agentIntents) {
+func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents [][]agentIntents) {
 	defer wg.Done()
 
 	ending := actions.MultiAgentEnd
 
-	if agentIndex == len(*intents)-1 {
+	if agentIndex == len(intents)-1 {
 		ending = actions.SingleAgentEnd
 	}
 
@@ -156,9 +154,7 @@ func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents *[][]agen
 		expandMABoxMoves(c, &newCoor, coordIndex, agentIndex, &localIntents, ending)
 	}
 
-	exploreMutex.Lock()
-	(*intents)[agentIndex] = localIntents
-	exploreMutex.Unlock()
+	intents[agentIndex] = localIntents
 }
 
 func expandMABoxMoves(state *CurrentState, boxCoorToMove *Coordinates, boxCoordIndex, agentIndex int, localIntents *[]agentIntents, ending byte) {
