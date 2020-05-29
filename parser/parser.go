@@ -80,10 +80,31 @@ func findCloserBox(coords level.Coordinates, char byte, boxes []level.NodeOrAgen
 	return pos
 }
 
+func removeBoxOrAgent(s []level.NodeOrAgent, index int) []level.NodeOrAgent {
+	return append(s[:index], s[index+1:]...)
+}
+
 func preproccessLvl(levelInfo *level.Info, state *level.CurrentState) {
 	goalCount := 0
 	inGameWalls := []level.Coordinates{}
 	boxGoalAssignment := make([]level.Coordinates, len(state.Boxes))
+
+	for boxIndex, box := range state.Boxes {
+		boxColor := levelInfo.BoxColor[box.Letter]
+		isBoxColorMoveable := false
+
+		for _, agentColor := range levelInfo.AgentColor {
+			isBoxAndAgentColorEqual := agentColor == boxColor
+			if isBoxAndAgentColorEqual {
+				isBoxColorMoveable = true
+				break
+			}
+		}
+
+		if !isBoxColorMoveable {
+			removeBoxOrAgent(state.Boxes, boxIndex)
+		}
+	}
 
 	wg := &sync.WaitGroup{}
 	wg.Add(3)
