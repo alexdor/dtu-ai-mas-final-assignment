@@ -24,38 +24,42 @@ type CurrentState struct {
 func (c *CurrentState) GetID() ID {
 	if len(c.ID) == 0 {
 		var s strings.Builder
-		for _, value := range append(c.Boxes, c.Agents...) {
-
-			err := s.WriteByte(value.Letter)
-			if err != nil {
-				communication.Error(err)
-			}
-
-			_, err = s.WriteString(strconv.Itoa(int(value.Coordinates[0])))
-			if err != nil {
-				communication.Error(err)
-			}
-
-			err = s.WriteByte(',')
-			if err != nil {
-				communication.Error(err)
-			}
-
-			_, err = s.WriteString(strconv.Itoa(int(value.Coordinates[1])))
-			if err != nil {
-				communication.Error(err)
-			}
-
-			err = s.WriteByte(' ')
-			if err != nil {
-				communication.Error(err)
-			}
-		}
-
+		generateID(&s, c.Boxes)
+		generateID(&s, c.Agents)
 		c.ID = ID(s.String())
 	}
 
 	return c.ID
+}
+
+func generateID(s *strings.Builder, agentOrBox []NodeOrAgent) {
+	for _, value := range agentOrBox {
+
+		err := s.WriteByte(value.Letter)
+		if err != nil {
+			communication.Error(err)
+		}
+
+		_, err = s.WriteString(strconv.Itoa(int(value.Coordinates[0])))
+		if err != nil {
+			communication.Error(err)
+		}
+
+		err = s.WriteByte(',')
+		if err != nil {
+			communication.Error(err)
+		}
+
+		_, err = s.WriteString(strconv.Itoa(int(value.Coordinates[1])))
+		if err != nil {
+			communication.Error(err)
+		}
+
+		err = s.WriteByte(' ')
+		if err != nil {
+			communication.Error(err)
+		}
+	}
 }
 
 var (
