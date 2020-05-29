@@ -89,6 +89,17 @@ func preproccessLvl(levelInfo *level.Info, state *level.CurrentState) {
 	inGameWalls := []level.Coordinates{}
 	boxGoalAssignment := make([]level.Coordinates, len(state.Boxes))
 
+	wg := &sync.WaitGroup{}
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+
+		for _, v := range levelInfo.GoalCoordinates {
+			goalCount += len(v)
+		}
+	}()
+
 	for boxIndex, box := range state.Boxes {
 		boxColor := levelInfo.BoxColor[box.Letter]
 		isBoxColorMoveable := false
@@ -107,8 +118,6 @@ func preproccessLvl(levelInfo *level.Info, state *level.CurrentState) {
 		}
 	}
 
-	wg := &sync.WaitGroup{}
-	wg.Add(3)
 	go func() {
 		defer wg.Done()
 
@@ -140,14 +149,6 @@ func preproccessLvl(levelInfo *level.Info, state *level.CurrentState) {
 			if !isEdgeWall {
 				inGameWalls = append(inGameWalls, key)
 			}
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-
-		for _, v := range levelInfo.GoalCoordinates {
-			goalCount += len(v)
 		}
 	}()
 
