@@ -48,7 +48,12 @@ func (levelInfo Info) IsCellFree(coor Coordinates, currentState *CurrentState) b
 		return false
 	}
 
-	for _, v := range append(currentState.Boxes, currentState.Agents...) {
+	for _, v := range currentState.Boxes {
+		if v.Coordinates == coor {
+			return false
+		}
+	}
+	for _, v := range currentState.Agents {
 		if v.Coordinates == coor {
 			return false
 		}
