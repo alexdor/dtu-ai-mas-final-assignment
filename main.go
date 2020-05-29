@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime"
 	"runtime/pprof"
 	"syscall"
 	"time"
@@ -16,6 +17,21 @@ import (
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+
+func memProfile() {
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		runtime.GC()    // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+	}
+}
 
 func main() {
 	isDebug := len(os.Getenv("DEBUG")) > 0
@@ -45,6 +61,7 @@ func main() {
 			pprof.StopCPUProfile()
 		}
 
+		memProfile()
 		os.Exit(1)
 	}()
 
@@ -58,4 +75,6 @@ func main() {
 	}
 
 	ai.Play(&levelInfo, &currentState, &ai.AStart{}, isDebug)
+
+	memProfile()
 }
