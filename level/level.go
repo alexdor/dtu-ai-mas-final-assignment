@@ -38,10 +38,6 @@ func (levelInfo Info) IsWall(coor Coordinates) bool {
 	_, ok := levelInfo.WallsCoordinates[coor]
 	return ok
 }
-func (levelInfo Info) IsBox(coor Coordinates) bool {
-	_, ok := levelInfo.WallsCoordinates[coor]
-	return ok
-}
 
 func (levelInfo Info) IsCellFree(coor Coordinates, currentState *CurrentState) bool {
 	if _, ok := levelInfo.WallsCoordinates[coor]; ok {
