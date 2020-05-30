@@ -67,6 +67,9 @@ function main() {
 
     let childOutput = "";
     let solved = null;
+    child.stderr.on("data", (data) => {
+      childOutput += `${data}`;
+    });
     child.stdout.on("data", (data) => {
       childOutput += `${data}`;
     });
@@ -81,15 +84,16 @@ function main() {
       solved =
         isSuccessCode &&
         childOutput.includes("[server][info] Level solved: Yes.");
-
       solved ? results.solved++ : results.failed++;
-
       results.levels.push({
         level,
         status: solved ? "✅" : "❌",
         actions: solved ? childOutput.match("Actions used: (\\d+)")[1] : null,
         time: solved
           ? childOutput.match("Last action time: ([+-]?([0-9]*[.])?[0-9]+)")[1]
+          : null,
+        statesExpanded: solved
+          ? childOutput.match("Goal was found after exploring (\\d+) states")[1]
           : null,
       });
 
@@ -158,11 +162,11 @@ function getResultsAsMarkdown(actionName) {
       ["total", "solved", "failed"],
       [total, solved, failed],
     ],
-    { align: ["c", "c", "c"] }
+    { align: "c" }
   );
   res += "\n\n";
   res += mdTable([Object.keys(levels[0]), ...levels.map(Object.values)], {
-    align: ["c", "c", "c", "c"],
+    align: "c",
   });
 
   return res;

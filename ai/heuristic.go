@@ -46,8 +46,8 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 		queue.Remove(node)
 
 		if value.IsGoalState() {
+			communication.Log("Goal was found after exploring", len(nodesVisited), "states")
 			if config.IsDebug {
-				communication.Log("Goal was found after exploring ", len(nodesVisited), " states")
 				communication.Log("Moves", string(value.Moves))
 				communication.Log("Agents Final State", value.Agents)
 				communication.Log("Boxes Final State", value.Boxes)
