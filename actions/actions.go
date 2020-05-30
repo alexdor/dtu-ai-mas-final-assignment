@@ -47,19 +47,25 @@ func Push(agentDirection, boxDirecation Direction, endWith byte) Action {
 }
 
 func ExecuteActions(actions Action) bool {
+	var actionRow string
 	for _, action := range strings.Split(string(actions), "\n") {
 		if len(action) == 0 {
 			continue
 		}
-
-		res, err := communication.SendMessage(strings.TrimRight(action, ";"))
+		actionRow = strings.TrimRight(action, ";")
+		res, err := communication.SendMessage(actionRow)
 		if err != nil {
+			communication.Log(actionRow)
 			communication.Error(err)
 			return false
 		}
 
 		for _, msg := range strings.Split(res, ";") {
 			if msg != config.ServersTrueValue {
+				communication.Log("\n")
+				communication.Log("Server didn't accept the following action:")
+				communication.Log(actionRow)
+				communication.Log(res, "\n")
 				return false
 			}
 		}
