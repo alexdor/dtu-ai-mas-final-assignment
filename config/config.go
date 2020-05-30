@@ -11,7 +11,7 @@ var (
 		Name: "NeverAI",
 	}
 
-	IsDebug = len(os.Getenv("DEBUG")) > 0
+	_, IsDebug = os.LookupEnv("DEBUG")
 )
 
 const (
