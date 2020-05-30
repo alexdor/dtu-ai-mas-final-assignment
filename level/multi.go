@@ -87,6 +87,9 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 					c.copy(&newState)
 
 					for j, action := range firstElement {
+						if bytes.Equal(action.action, noopIntent.action) {
+							continue
+						}
 						newState.Agents[j].Coordinates = action.agentNewCoor
 						newState.Moves = append(newState.Moves, action.action...)
 
@@ -95,9 +98,11 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 						}
 					}
 
-					newState.Agents[i].Coordinates = secondElement.agentNewCoor
-					if secondElement.boxNewCoor != noopIntent.boxNewCoor {
-						newState.Boxes[secondElement.boxIndex].Coordinates = secondElement.boxNewCoor
+					if !bytes.Equal(secondElement.action, noopIntent.action) {
+						newState.Agents[i].Coordinates = secondElement.agentNewCoor
+						if secondElement.boxNewCoor != noopIntent.boxNewCoor {
+							newState.Boxes[secondElement.boxIndex].Coordinates = secondElement.boxNewCoor
+						}
 					}
 
 					newState.Moves = append(newState.Moves, secondElement.action...)
