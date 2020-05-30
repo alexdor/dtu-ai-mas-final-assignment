@@ -13,6 +13,7 @@ import (
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/ai"
 	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
+	"github.com/alexdor/dtu-ai-mas-final-assignment/config"
 	"github.com/alexdor/dtu-ai-mas-final-assignment/parser"
 )
 
@@ -34,8 +35,7 @@ func memProfile() {
 }
 
 func main() {
-	isDebug := len(os.Getenv("DEBUG")) > 0
-	if isDebug {
+	if config.IsDebug {
 		time.Sleep(10 * time.Second)
 		communication.Log("Starting search")
 	}
@@ -74,7 +74,7 @@ func main() {
 		return
 	}
 
-	ai.Play(&levelInfo, &currentState, &ai.AStart{}, isDebug)
+	ai.Play(&levelInfo, &currentState, &ai.AStart{})
 
 	memProfile()
 }

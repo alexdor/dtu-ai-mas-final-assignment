@@ -7,12 +7,13 @@ import (
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/actions"
 	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
+	"github.com/alexdor/dtu-ai-mas-final-assignment/config"
 	"github.com/alexdor/dtu-ai-mas-final-assignment/level"
 )
 
 type (
 	Heuristic interface {
-		Solve(*level.Info, *level.CurrentState, bool) actions.Action
+		Solve(*level.Info, *level.CurrentState) actions.Action
 	}
 
 	AStart struct{}
@@ -25,7 +26,7 @@ func (s StateChildren) Less(i, j int) bool { return s[i].Cost < s[j].Cost }
 func (s StateChildren) Len() int           { return len(s) }
 func (s StateChildren) Swap(i, j int)      { *s[i], *s[j] = *s[j], *s[i] }
 
-func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState, isDebug bool) actions.Action {
+func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) actions.Action {
 	expand := level.ExpandSingleAgent
 	if len(currentState.Agents) > 1 {
 		expand = level.ExpandMultiAgent
@@ -45,9 +46,12 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState, i
 		queue.Remove(node)
 
 		if value.IsGoalState() {
-			if isDebug {
+			if config.IsDebug {
 				communication.Log("Goal was found after exploring ", len(nodesVisited), " states")
 				communication.Log("Moves", string(value.Moves))
+				communication.Log("Agents Final State", value.Agents)
+				communication.Log("Boxes Final State", value.Boxes)
+				communication.Log("Goals", value.LevelInfo.GoalCoordinates)
 			}
 			return value.Moves
 		}
