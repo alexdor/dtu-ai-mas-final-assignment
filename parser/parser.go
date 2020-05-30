@@ -80,11 +80,32 @@ func findCloserBox(coords level.Coordinates, char byte, boxes []level.NodeOrAgen
 	return pos
 }
 
-func removeBoxOrAgent(s []level.NodeOrAgent, index int) []level.NodeOrAgent {
-	return append(s[:index], s[index+1:]...)
-}
-
 func preproccessLvl(levelInfo *level.Info, state *level.CurrentState) {
+	var moveableBoxes []level.NodeOrAgent
+
+	for _, box := range state.Boxes {
+		boxColor := levelInfo.BoxColor[box.Letter]
+		isBoxColorMoveable := false
+
+		for _, agentColor := range levelInfo.AgentColor {
+			isBoxAndAgentColorEqual := agentColor == boxColor
+			if isBoxAndAgentColorEqual {
+				isBoxColorMoveable = true
+				break
+			}
+		}
+
+		if !isBoxColorMoveable {
+			levelInfo.WallsCoordinates[box.Coordinates] = struct{}{}
+			delete(levelInfo.GoalCoordinates, box.Letter)
+			continue
+		}
+
+		moveableBoxes = append(moveableBoxes, box)
+	}
+
+	state.Boxes = moveableBoxes
+
 	goalCount := 0
 	inGameWalls := []level.Coordinates{}
 	boxGoalAssignment := make([]level.Coordinates, len(state.Boxes))
@@ -99,24 +120,6 @@ func preproccessLvl(levelInfo *level.Info, state *level.CurrentState) {
 			goalCount += len(v)
 		}
 	}()
-
-	for boxIndex, box := range state.Boxes {
-		boxColor := levelInfo.BoxColor[box.Letter]
-		isBoxColorMoveable := false
-
-		for _, agentColor := range levelInfo.AgentColor {
-			isBoxAndAgentColorEqual := agentColor == boxColor
-			if isBoxAndAgentColorEqual {
-				isBoxColorMoveable = true
-				break
-			}
-		}
-
-		if !isBoxColorMoveable {
-			levelInfo.WallsCoordinates[box.Coordinates] = struct{}{}
-			state.Boxes = removeBoxOrAgent(state.Boxes, boxIndex)
-		}
-	}
 
 	go func() {
 		defer wg.Done()
