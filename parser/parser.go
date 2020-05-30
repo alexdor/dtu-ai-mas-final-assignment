@@ -51,11 +51,6 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 
 	levelInfo.MaxCoord = level.Coordinates{row, col}
 
-	// Make sure agents are sorted
-	sort.Slice(currentState.Agents, func(i, j int) bool {
-		return currentState.Agents[i].Letter < currentState.Agents[j].Letter
-	})
-
 	preproccessLvl(&levelInfo, &currentState)
 
 	return levelInfo, currentState, nil
@@ -81,36 +76,49 @@ func findCloserBox(coords level.Coordinates, char byte, boxes []level.NodeOrAgen
 }
 
 func preproccessLvl(levelInfo *level.Info, state *level.CurrentState) {
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
+
+	// Make sure agents are sorted
+	go func() {
+		defer wg.Done()
+		sort.Slice(state.Agents, func(i, j int) bool {
+			return state.Agents[i].Letter < state.Agents[j].Letter
+		})
+	}()
+
 	var moveableBoxes []level.NodeOrAgent
+	go func() {
+		defer wg.Done()
+		for _, box := range state.Boxes {
+			boxColor := levelInfo.BoxColor[box.Letter]
+			isBoxColorMoveable := false
 
-	for _, box := range state.Boxes {
-		boxColor := levelInfo.BoxColor[box.Letter]
-		isBoxColorMoveable := false
-
-		for _, agentColor := range levelInfo.AgentColor {
-			isBoxAndAgentColorEqual := agentColor == boxColor
-			if isBoxAndAgentColorEqual {
-				isBoxColorMoveable = true
-				break
+			for _, agentColor := range levelInfo.AgentColor {
+				isBoxAndAgentColorEqual := agentColor == boxColor
+				if isBoxAndAgentColorEqual {
+					isBoxColorMoveable = true
+					break
+				}
 			}
+
+			if !isBoxColorMoveable {
+				levelInfo.WallsCoordinates[box.Coordinates] = struct{}{}
+				delete(levelInfo.GoalCoordinates, box.Letter)
+				continue
+			}
+
+			moveableBoxes = append(moveableBoxes, box)
 		}
-
-		if !isBoxColorMoveable {
-			levelInfo.WallsCoordinates[box.Coordinates] = struct{}{}
-			delete(levelInfo.GoalCoordinates, box.Letter)
-			continue
-		}
-
-		moveableBoxes = append(moveableBoxes, box)
-	}
-
-	state.Boxes = moveableBoxes
+	}()
 
 	goalCount := 0
 	inGameWalls := []level.Coordinates{}
 	boxGoalAssignment := make([]level.Coordinates, len(state.Boxes))
 
-	wg := &sync.WaitGroup{}
+	wg.Wait()
+	state.Boxes = moveableBoxes
+
 	wg.Add(3)
 
 	go func() {
