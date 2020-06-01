@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -55,7 +54,8 @@ func main() {
 
 	go func() {
 		<-sigs
-		fmt.Println("Got a timeout")
+		communication.Log("Got a timeout")
+		communication.Log("Explored", len(ai.NodesVisited), "states")
 
 		if *cpuprofile != "" {
 			pprof.StopCPUProfile()

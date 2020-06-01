@@ -1,8 +1,8 @@
-name: 🏃 (Multi)
+name: Multi agent 🏃
 on: pull_request
 jobs:
   run-forest-run:
-    name: Build and run (multi)
+    name: Multi agent Build and run
     runs-on: ubuntu-latest
     steps:
       - name: ☁️ Checkout code
@@ -19,7 +19,7 @@ jobs:
         run: yarn
       - name: 👷 Build go executable
         run: go build main.go
-      - name: 🏃 Run forest run!
+      - name: 🏃 Run multi forest run!
         run: node runner.js -l levels/new_levels -c "./main" -t 180 -i SA
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
