@@ -92,9 +92,11 @@ function main() {
         time: solved
           ? childOutput.match("Last action time: ([+-]?([0-9]*[.])?[0-9]+)")[1]
           : null,
-        statesExpanded: solved
-          ? childOutput.match("Goal was found after exploring (\\d+) states")[1]
-          : null,
+        statesExpanded: childOutput.match(
+          solved
+            ? "Goal was found after exploring (\\d+) states"
+            : "Explored (\\d+) states"
+        )[1],
       });
 
       log.clear();

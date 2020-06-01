@@ -11,6 +11,8 @@ import (
 	"github.com/alexdor/dtu-ai-mas-final-assignment/level"
 )
 
+var NodesVisited level.Visited
+
 type (
 	Heuristic interface {
 		Solve(*level.Info, *level.CurrentState) actions.Action
@@ -33,9 +35,9 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 	}
 
 	lenToAllocate := len(levelInfo.WallsCoordinates) / 2
-	nodesVisited := make(level.Visited, lenToAllocate)
+	NodesVisited = make(level.Visited, lenToAllocate)
 	// add the root node to the map of the visited nodes
-	nodesVisited[currentState.GetID()] = struct{}{}
+	NodesVisited[currentState.GetID()] = struct{}{}
 
 	// Double linked list
 	queue := list.New()
@@ -46,7 +48,7 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 		queue.Remove(node)
 
 		if value.IsGoalState() {
-			communication.Log("Goal was found after exploring", len(nodesVisited), "states")
+			communication.Log("Goal was found after exploring", len(NodesVisited), "states")
 			if config.IsDebug {
 				communication.Log("Moves", string(value.Moves))
 				communication.Log("Agents Final State", value.Agents)
@@ -58,18 +60,18 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 
 		el := queue.Front()
 
-		children := expand(nodesVisited, &value)
+		children := expand(NodesVisited, &value)
 		sort.Sort(StateChildren(children))
 
 		for _, child := range children {
 			// The only writer to the map (this happens after all goroutines are done)
 			// If the above changes, this is going to lead to a race condition
-			if _, ok := nodesVisited[child.ID]; !ok {
+			if _, ok := NodesVisited[child.ID]; !ok {
 				if el == nil {
 					queue.PushBack(*child)
 					continue
 				}
-				nodesVisited[child.ID] = struct{}{}
+				NodesVisited[child.ID] = struct{}{}
 				cost := child.Cost
 				for {
 					if cost < el.Value.(level.CurrentState).Cost {
@@ -87,7 +89,7 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 		}
 	}
 
-	communication.Log("Explored ", len(nodesVisited), "states and failed to find a solution")
+	communication.Log("Explored ", len(NodesVisited), "states and failed to find a solution")
 	os.Exit(1)
 
 	return nil
