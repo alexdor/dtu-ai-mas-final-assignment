@@ -89,7 +89,7 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 		}
 	}
 
-	communication.Log("Explored ", len(NodesVisited), "states and failed to find a solution")
+	communication.Log("Explored", len(NodesVisited), "states and failed to find a solution")
 	os.Exit(1)
 
 	return nil

@@ -55,7 +55,7 @@ func main() {
 	go func() {
 		<-sigs
 		communication.Log("Got a timeout")
-		communication.Log("Explored ", len(ai.NodesVisited), "states")
+		communication.Log("Explored", len(ai.NodesVisited), "states")
 
 		if *cpuprofile != "" {
 			pprof.StopCPUProfile()
