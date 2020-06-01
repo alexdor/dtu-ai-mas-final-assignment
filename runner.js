@@ -42,6 +42,11 @@ const results = {
   levels: [],
 };
 
+function parseRegexp(text, regexp) {
+  const match = text.match(regexp);
+  return match ? match[1] : "Error parsing output";
+}
+
 function main() {
   let levels = [levelsDir];
   try {
@@ -67,6 +72,10 @@ function main() {
 
     let childOutput = "";
     let solved = null;
+
+    child.stderr.on("data", (data) => {
+      childOutput += `${data}`;
+    });
     child.stdout.on("data", (data) => {
       childOutput += `${data}`;
     });
@@ -81,16 +90,25 @@ function main() {
       solved =
         isSuccessCode &&
         childOutput.includes("[server][info] Level solved: Yes.");
-
       solved ? results.solved++ : results.failed++;
-
       results.levels.push({
         level,
         status: solved ? "✅" : "❌",
-        actions: solved ? childOutput.match("Actions used: (\\d+)")[1] : null,
-        time: solved
-          ? childOutput.match("Last action time: ([+-]?([0-9]*[.])?[0-9]+)")[1]
+        actions: solved
+          ? parseRegexp(childOutput, "Actions used: (\\d+)")
           : null,
+        time: solved
+          ? parseRegexp(
+              childOutput,
+              "Last action time: ([+-]?([0-9]*[.])?[0-9]+)"
+            )
+          : null,
+        statesExpanded: parseRegexp(
+          childOutput,
+          solved
+            ? "Goal was found after exploring (\\d+) states"
+            : "Explored (\\d+) states"
+        ),
       });
 
       log.clear();
@@ -158,11 +176,11 @@ function getResultsAsMarkdown(actionName) {
       ["total", "solved", "failed"],
       [total, solved, failed],
     ],
-    { align: ["c", "c", "c"] }
+    { align: "c" }
   );
   res += "\n\n";
   res += mdTable([Object.keys(levels[0]), ...levels.map(Object.values)], {
-    align: ["c", "c", "c", "c"],
+    align: "c",
   });
 
   return res;
