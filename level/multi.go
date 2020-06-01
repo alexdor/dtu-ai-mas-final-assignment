@@ -123,10 +123,11 @@ func calcNewState(currentState, newState *CurrentState, currentIntents []agentIn
 			newState.Boxes[finalIntent.boxIndex].Coordinates = finalIntent.boxNewCoor
 		}
 	}
-	calculateCost(newState, nodesInFrontier)
 
 	newState.Moves = append(newState.Moves, finalIntent.action...)
 	newState.Moves = append(newState.Moves, actions.SingleAgentEnd)
+
+	calculateCost(newState, nodesInFrontier)
 }
 
 func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents [][]agentIntents) {
