@@ -1,8 +1,8 @@
-name: 🏃 (Multi)
+name: Multi agent 🏃
 on: pull_request
 jobs:
   run-forest-run:
-    name: Build and run (multi)
+    name: Multi agent Build and run
     runs-on: ubuntu-latest
     steps:
       - name: ☁️ Checkout code
