@@ -178,11 +178,15 @@ func coordToDirection(oldCoord, newCoord Coordinates) actions.Direction {
 }
 
 func calculateCost(newState *CurrentState, nodesVisited Visited) {
-	defer wg.Done()
 
 	if _, ok := nodesVisited[newState.GetID()]; !ok {
 		newState.CalculateCost()
 	}
+}
+
+func calculateCostWithGoroutine(newState *CurrentState, nodesVisited Visited) {
+	defer wg.Done()
+	calculateCost(newState, nodesVisited)
 }
 
 func addStateToStatesToExplore(nextStates *[]*CurrentState, newState *CurrentState, nodesVisited Visited) {
@@ -190,7 +194,7 @@ func addStateToStatesToExplore(nextStates *[]*CurrentState, newState *CurrentSta
 
 	*nextStates = append(*nextStates, newState)
 
-	go calculateCost(newState, nodesVisited)
+	go calculateCostWithGoroutine(newState, nodesVisited)
 }
 
 func (c *CurrentState) FindBoxAt(coord Coordinates) int {

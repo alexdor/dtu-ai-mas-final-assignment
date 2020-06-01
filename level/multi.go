@@ -72,6 +72,7 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 
 				// If last intent calculate next states
 				if isLastIntent {
+					// If all the actions are noop then skip creating them
 					if bytes.Equal(secondElement.action, actions.NoOpAction) {
 						skip := true
 						for _, action := range firstElement {
@@ -86,35 +87,10 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 					}
 
 					var newState CurrentState
-
-					c.copy(&newState)
-
-					for j, action := range firstElement {
-						if bytes.Equal(action.action, noopIntent.action) {
-							continue
-						}
-						newState.Agents[j].Coordinates = action.agentNewCoor
-						newState.Moves = append(newState.Moves, action.action...)
-
-						if action.boxNewCoor != noopIntent.boxNewCoor {
-							newState.Boxes[action.boxIndex].Coordinates = action.boxNewCoor
-						}
-					}
-
-					if !bytes.Equal(secondElement.action, noopIntent.action) {
-						newState.Agents[i].Coordinates = secondElement.agentNewCoor
-						if secondElement.boxNewCoor != noopIntent.boxNewCoor {
-							newState.Boxes[secondElement.boxIndex].Coordinates = secondElement.boxNewCoor
-						}
-					}
-
-					newState.Moves = append(newState.Moves, secondElement.action...)
-					newState.Moves = append(newState.Moves, actions.SingleAgentEnd)
 					nextStates = append(nextStates, &newState)
-
-					wg.Add(1)
-
-					go calculateCost(&newState, nodesInFrontier)
+					// One for the new state and one for the cost
+					wg.Add(2)
+					go calcNewState(c, &newState, firstElement, secondElement, nodesInFrontier, i)
 				}
 			}
 		}
@@ -124,6 +100,33 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 	wg.Wait()
 
 	return nextStates
+}
+
+func calcNewState(currentState, newState *CurrentState, currentIntents []agentIntents, finalIntent agentIntents, nodesInFrontier Visited, agentIndex int) {
+	defer wg.Done()
+	currentState.copy(newState)
+	for j, action := range currentIntents {
+		if bytes.Equal(action.action, noopIntent.action) {
+			continue
+		}
+		newState.Agents[j].Coordinates = action.agentNewCoor
+		newState.Moves = append(newState.Moves, action.action...)
+
+		if action.boxNewCoor != noopIntent.boxNewCoor {
+			newState.Boxes[action.boxIndex].Coordinates = action.boxNewCoor
+		}
+	}
+
+	if !bytes.Equal(finalIntent.action, noopIntent.action) {
+		newState.Agents[agentIndex].Coordinates = finalIntent.agentNewCoor
+		if finalIntent.boxNewCoor != noopIntent.boxNewCoor {
+			newState.Boxes[finalIntent.boxIndex].Coordinates = finalIntent.boxNewCoor
+		}
+	}
+	calculateCost(newState, nodesInFrontier)
+
+	newState.Moves = append(newState.Moves, finalIntent.action...)
+	newState.Moves = append(newState.Moves, actions.SingleAgentEnd)
 }
 
 func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents [][]agentIntents) {
