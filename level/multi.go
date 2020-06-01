@@ -89,7 +89,7 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 					var newState CurrentState
 					nextStates = append(nextStates, &newState)
 					// One for the new state and one for the cost
-					wg.Add(2)
+					wg.Add(1)
 					go calcNewState(c, &newState, firstElement, secondElement, nodesInFrontier, i)
 				}
 			}
