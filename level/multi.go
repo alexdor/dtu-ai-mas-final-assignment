@@ -43,6 +43,9 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 		localIntents := [][]agentIntents{}
 
 		for _, firstElement := range mergedIntents {
+			if len(intents[i]) == 0 {
+				intents[i] = []agentIntents{noopIntent}
+			}
 		outer:
 			for _, secondElement := range intents[i] {
 				skipAppend = false
