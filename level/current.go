@@ -82,37 +82,16 @@ func (c *CurrentState) copy(newState *CurrentState) {
 
 }
 
-func goroutineCleanupFunc() {
-	wg.Done()
-	<-goroutineLimiter
-}
-
-func goroutineCall() {
-	wg.Add(1)
-	goroutineLimiter <- struct{}{}
-}
-
-func coordToDirection(oldCoord, newCoord Coordinates) actions.Direction {
-	tmp := Coordinates{newCoord[0] - oldCoord[0], newCoord[1] - oldCoord[1]}
-	for i := range coordManipulation {
-		if coordManipulation[i] == tmp {
-			return directionForCoordinates[i]
+func (c *CurrentState) findBoxAt(coord Coordinates) int {
+	for i, box := range c.Boxes {
+		if box.Coordinates == coord {
+			return i
 		}
 	}
 
-	panic("Failed to find direction, this should never happen")
-}
+	communication.Error(ErrFailedToFindBox)
 
-func calculateCost(newState *CurrentState, nodesVisited Visited) {
-
-	if _, ok := nodesVisited[newState.GetID()]; !ok {
-		newState.CalculateCost()
-	}
-}
-
-func calculateCostWithGoroutine(newState *CurrentState, nodesVisited Visited) {
-	defer wg.Done()
-	calculateCost(newState, nodesVisited)
+	return -1
 }
 
 func (c *CurrentState) IsGoalState() bool {
@@ -150,5 +129,32 @@ func (c *CurrentState) IsBoxAndCanMove(coor Coordinates, agentChar byte) bool {
 func (c *CurrentState) CalculateCost() {
 	if c.Cost == 0 {
 		c.Cost = CalculateAggregatedCost(c)
+	}
+}
+
+func goroutineCleanupFunc() {
+	wg.Done()
+	<-goroutineLimiter
+}
+
+func goroutineCall() {
+	wg.Add(1)
+	goroutineLimiter <- struct{}{}
+}
+func coordToDirection(oldCoord, newCoord Coordinates) actions.Direction {
+	tmp := Coordinates{newCoord[0] - oldCoord[0], newCoord[1] - oldCoord[1]}
+	for i := range coordManipulation {
+		if coordManipulation[i] == tmp {
+			return directionForCoordinates[i]
+		}
+	}
+
+	panic("Failed to find direction, this should never happen")
+}
+
+func calculateCost(newState *CurrentState, nodesVisited Visited) {
+
+	if _, ok := nodesVisited[newState.GetID()]; !ok {
+		newState.CalculateCost()
 	}
 }
