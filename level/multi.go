@@ -21,11 +21,12 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 	numOfAgents := len(c.Agents)
 	wg.Add(numOfAgents)
 
+	// Create a list to hold possible actions for each agent
 	intents := make([][]agentIntents, numOfAgents)
 
+	// Calculate actions for each agent
 	for agentIndex := range c.Agents {
 		goroutineLimiter <- struct{}{}
-		agentIndex := agentIndex
 		go c.figureOutAgentMovements(agentIndex, intents)
 	}
 
@@ -73,33 +74,20 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 	}
 
 	nextStates := make([]CurrentState, len(mergedIntents))
-	i := 0
-	for _, agentIntent := range mergedIntents {
-
-		// If all the actions are noop then skip creating them
-		skip := true
-		for _, action := range agentIntent {
-			if !bytes.Equal(action.action, actions.NoOpAction) {
-				skip = false
-				break
-			}
-		}
-		if skip {
-			continue
-		}
-
-		goroutineCall()
-		go calcNewState(c, &nextStates[i], agentIntent, nodesInFrontier)
-		i++
+	statesCreated := 0
+	for _, intent := range mergedIntents {
+		waitGoroutineToFreeUp()
+		go calcNewState(c, &nextStates[statesCreated], intent, nodesInFrontier)
+		statesCreated++
 	}
 
 	wg.Wait()
 
-	return nextStates[:i]
+	return nextStates[:statesCreated]
 }
 
 func calcNewState(currentState, newState *CurrentState, currentIntents []agentIntents, nodesInFrontier Visited) {
-	defer goroutineCleanupFunc()
+	defer cleanupAfterGoroutine()
 	currentState.copy(newState)
 	for j, action := range currentIntents {
 		newState.Moves = append(newState.Moves, action.action...)
@@ -119,7 +107,7 @@ func calcNewState(currentState, newState *CurrentState, currentIntents []agentIn
 }
 
 func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents [][]agentIntents) {
-	defer goroutineCleanupFunc()
+	defer cleanupAfterGoroutine()
 
 	localIntents := []agentIntents{}
 

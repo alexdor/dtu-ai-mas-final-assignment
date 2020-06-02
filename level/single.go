@@ -17,7 +17,7 @@ func ExpandSingleAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState 
 		}
 
 		if c.LevelInfo.IsCellFree(newCoor, c) {
-			goroutineCall()
+			waitGoroutineToFreeUp()
 			go calculateAgentMove(c, &nextStates[i], &newCoor, coordIndex, nodesInFrontier)
 			i++
 			continue
@@ -36,7 +36,7 @@ func ExpandSingleAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState 
 }
 
 func calculateAgentMove(currentState, newState *CurrentState, newCoor *Coordinates, coordIndex int, nodesVisited Visited) {
-	defer goroutineCleanupFunc()
+	defer cleanupAfterGoroutine()
 	currentState.copy(newState)
 	newState.Agents[0].Coordinates = *newCoor
 	newState.Moves = append(newState.Moves, actions.Move(directionForCoordinates[coordIndex], actions.SingleAgentEnd)...)
@@ -79,7 +79,7 @@ func expandBoxMoves(state *CurrentState, nextStates []CurrentState, boxCoorToMov
 				agentCoor, boxCoor = currentBoxCoor, agentCoor
 				boxDirection = coordToDirection(currentBoxCoor, boxCoor)
 			}
-			goroutineCall()
+			waitGoroutineToFreeUp()
 			go calculateAgentBoxMove(
 				boxMoveCalc{
 					currentState:      state,
@@ -107,7 +107,7 @@ type boxMoveCalc struct {
 }
 
 func calculateAgentBoxMove(params boxMoveCalc) {
-	defer goroutineCleanupFunc()
+	defer cleanupAfterGoroutine()
 	params.currentState.copy(params.newState)
 
 	moveAction := params.action(coordToDirection(params.currentAgentCoord, params.agentCoor), params.boxDirection, actions.SingleAgentEnd)
