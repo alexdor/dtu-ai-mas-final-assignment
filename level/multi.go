@@ -43,6 +43,10 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 		mergedIntents[i] = []agentIntents{intents[0][i]}
 	}
 
+	if len(mergedIntents) == 0 {
+		mergedIntents = [][]agentIntents{{noopIntent}}
+	}
+
 	// Merge the actions for the rest of the agents on the first agent
 	for currentAgentIndex := 1; currentAgentIndex < len(intents); currentAgentIndex++ {
 		// tmp list to hold the new merged intents
