@@ -27,7 +27,7 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 	// Calculate actions for each agent
 	for agentIndex := range c.Agents {
 		goroutineLimiter <- struct{}{}
-		go c.figureOutAgentMovements(agentIndex, intents)
+		go c.figureOutAgentMovements(agentIndex, &intents[agentIndex])
 	}
 
 	hasConflict := false
@@ -112,7 +112,7 @@ func calcNewState(currentState, newState *CurrentState, currentIntents []agentIn
 	calculateCost(newState, nodesInFrontier)
 }
 
-func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents [][]agentIntents) {
+func (c *CurrentState) figureOutAgentMovements(agentIndex int, intentToUpdate *[]agentIntents) {
 	defer cleanupAfterGoroutine()
 
 	localIntents := []agentIntents{}
@@ -142,7 +142,7 @@ func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents [][]agent
 		expandMABoxMoves(c, &newCoor, coordIndex, agentIndex, &localIntents)
 	}
 
-	intents[agentIndex] = localIntents
+	*intentToUpdate = localIntents
 }
 
 func expandMABoxMoves(state *CurrentState, boxCoorToMove *Coordinates, boxCoordIndex, agentIndex int, localIntents *[]agentIntents) {
