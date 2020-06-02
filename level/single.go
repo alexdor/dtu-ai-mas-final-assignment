@@ -6,9 +6,9 @@ import (
 )
 
 func ExpandSingleAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
-	agentIndex := 0
 	agent := c.Agents[0]
-	nextStates := []CurrentState{}
+	nextStates := make([]CurrentState, len(coordManipulation)*4)
+	i := 0
 	agentCoor := agent.Coordinates
 
 	for coordIndex, move := range coordManipulation {
@@ -17,31 +17,34 @@ func ExpandSingleAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState 
 			continue
 		}
 
-		var newState CurrentState
-
-		c.copy(&newState)
-
 		if c.LevelInfo.IsCellFree(newCoor, c) {
-			newState.Agents[agentIndex].Coordinates = newCoor
-			newState.Moves = append(newState.Moves, actions.Move(directionForCoordinates[coordIndex], actions.SingleAgentEnd)...)
-			addStateToStatesToExplore(&nextStates, newState, nodesInFrontier)
-
+			goroutineCall()
+			go calculateAgentMove(c, &nextStates[i], &newCoor, coordIndex, nodesInFrontier)
+			i++
 			continue
 		}
 		// Check if the cell has a box that can be moved by this agent
-		if !newState.IsBoxAndCanMove(newCoor, agent.Letter) {
+		if !c.IsBoxAndCanMove(newCoor, agent.Letter) {
 			continue
 		}
 
-		expandBoxMoves(&newState, &nextStates, &newCoor, coordIndex, agentIndex, nodesInFrontier)
+		expandBoxMoves(c, nextStates, &newCoor, coordIndex, nodesInFrontier, &i)
 	}
 
 	wg.Wait()
 
-	return nextStates
+	return nextStates[:i]
 }
 
-func expandBoxMoves(state *CurrentState, nextStates *[]CurrentState, boxCoorToMove *Coordinates, boxCoordIndex, agentIndex int, nodesVisited Visited) {
+func calculateAgentMove(currentState, newState *CurrentState, newCoor *Coordinates, coordIndex int, nodesVisited Visited) {
+	defer goroutineCleanupFunc()
+	currentState.copy(newState)
+	newState.Agents[0].Coordinates = *newCoor
+	newState.Moves = append(newState.Moves, actions.Move(directionForCoordinates[coordIndex], actions.SingleAgentEnd)...)
+	calculateCost(newState, nodesVisited)
+}
+
+func expandBoxMoves(state *CurrentState, nextStates []CurrentState, boxCoorToMove *Coordinates, boxCoordIndex int, nodesVisited Visited, i *int) {
 	// Prealloc variables
 	var (
 		isPush bool
@@ -54,7 +57,7 @@ func expandBoxMoves(state *CurrentState, nextStates *[]CurrentState, boxCoorToMo
 	boxIndex := state.FindBoxAt(*boxCoorToMove)
 	currentBoxCoor := state.Boxes[boxIndex].Coordinates
 
-	currentAgentCoord := state.Agents[agentIndex].Coordinates
+	currentAgentCoord := state.Agents[0].Coordinates
 
 	for action_i, action := range pullOrPush {
 		isPush = action_i == 1
@@ -77,27 +80,44 @@ func expandBoxMoves(state *CurrentState, nextStates *[]CurrentState, boxCoorToMo
 				agentCoor, boxCoor = currentBoxCoor, agentCoor
 				boxDirection = coordToDirection(currentBoxCoor, boxCoor)
 			}
-
-			var copyOfState CurrentState
-
-			state.copy(&copyOfState)
-
-			moveAction := action(coordToDirection(currentAgentCoord, agentCoor), boxDirection, actions.SingleAgentEnd)
-			copyOfState.Moves = append(copyOfState.Moves, moveAction...)
-			copyOfState.Agents[agentIndex].Coordinates = agentCoor
-			copyOfState.Boxes[boxIndex].Coordinates = boxCoor
-
-			addStateToStatesToExplore(nextStates, copyOfState, nodesVisited)
+			goroutineCall()
+			go calculateAgentBoxMove(
+				boxMoveCalc{
+					currentState:      state,
+					newState:          &nextStates[*i],
+					nodesVisited:      nodesVisited,
+					action:            action,
+					agentCoor:         agentCoor,
+					boxCoor:           boxCoor,
+					boxDirection:      boxDirection,
+					boxIndex:          boxIndex,
+					currentAgentCoord: currentAgentCoord,
+				})
+			*i++
 		}
 	}
 }
 
-func addStateToStatesToExplore(nextStates *[]CurrentState, newState CurrentState, nodesVisited Visited) {
-	wg.Add(1)
+type boxMoveCalc struct {
+	currentState, newState                *CurrentState
+	currentAgentCoord, agentCoor, boxCoor Coordinates
+	boxDirection                          byte
+	boxIndex                              int
+	nodesVisited                          Visited
+	action                                actions.PullOrPush
+}
 
-	*nextStates = append(*nextStates, newState)
+func calculateAgentBoxMove(params boxMoveCalc) {
+	defer goroutineCleanupFunc()
+	params.currentState.copy(params.newState)
 
-	go calculateCostWithGoroutine(&(*nextStates)[len(*nextStates)-1], nodesVisited)
+	moveAction := params.action(coordToDirection(params.currentAgentCoord, params.agentCoor), params.boxDirection, actions.SingleAgentEnd)
+	params.newState.Moves = append(params.newState.Moves, moveAction...)
+	params.newState.Agents[0].Coordinates = params.agentCoor
+	params.newState.Boxes[params.boxIndex].Coordinates = params.boxCoor
+
+	calculateCost(params.newState, params.nodesVisited)
+
 }
 
 func (c *CurrentState) FindBoxAt(coord Coordinates) int {

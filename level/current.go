@@ -82,6 +82,16 @@ func (c *CurrentState) copy(newState *CurrentState) {
 
 }
 
+func goroutineCleanupFunc() {
+	wg.Done()
+	<-goroutineLimiter
+}
+
+func goroutineCall() {
+	wg.Add(1)
+	goroutineLimiter <- struct{}{}
+}
+
 func coordToDirection(oldCoord, newCoord Coordinates) actions.Direction {
 	tmp := Coordinates{newCoord[0] - oldCoord[0], newCoord[1] - oldCoord[1]}
 	for i := range coordManipulation {
