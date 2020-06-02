@@ -51,7 +51,7 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 
 	levelInfo.MaxCoord = level.Coordinates{row, col}
 
-	preproccessLvl(&levelInfo, &currentState)
+	preprocessLvl(&levelInfo, &currentState)
 
 	return levelInfo, currentState, nil
 }
@@ -75,7 +75,7 @@ func findCloserBox(coords level.Coordinates, char byte, boxes []level.NodeOrAgen
 	return pos
 }
 
-func preproccessLvl(levelInfo *level.Info, state *level.CurrentState) {
+func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 
