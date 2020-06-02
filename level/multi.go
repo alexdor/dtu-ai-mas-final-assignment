@@ -17,19 +17,19 @@ type agentIntents struct {
 	boxIndex     int
 }
 
-func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState {
+func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 	numOfAgents := len(c.Agents)
 	wg.Add(numOfAgents)
 
 	intents := make([][]agentIntents, numOfAgents)
 
 	for agentIndex := range c.Agents {
+		goroutineLimiter <- struct{}{}
 		agentIndex := agentIndex
 		go c.figureOutAgentMovements(agentIndex, intents)
 	}
 
-	nextStates := []*CurrentState{}
-	isLastIntent, hasConflict, skipAppend := false, false, false
+	hasConflict, skipAppend := false, false
 
 	wg.Wait()
 	mergedIntents := make([][]agentIntents, len(intents[0]))
@@ -39,14 +39,12 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 	}
 
 	for i := 1; i < len(intents); i++ {
-		isLastIntent = i == len(intents)-1
 		localIntents := [][]agentIntents{}
 
 		for _, firstElement := range mergedIntents {
 			if len(intents[i]) == 0 {
 				intents[i] = []agentIntents{noopIntent}
 			}
-		outer:
 			for _, secondElement := range intents[i] {
 				skipAppend = false
 
@@ -69,69 +67,64 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState 
 				if !skipAppend {
 					localIntents = append(localIntents, append(firstElement, secondElement))
 				}
-
-				// If last intent calculate next states
-				if isLastIntent {
-					// If all the actions are noop then skip creating them
-					if bytes.Equal(secondElement.action, actions.NoOpAction) {
-						skip := true
-						for _, action := range firstElement {
-							if !bytes.Equal(action.action, actions.NoOpAction) {
-								skip = false
-								break
-							}
-						}
-						if skip {
-							continue outer
-						}
-					}
-
-					var newState CurrentState
-					nextStates = append(nextStates, &newState)
-					// One for the new state and one for the cost
-					wg.Add(1)
-					go calcNewState(c, &newState, firstElement, secondElement, nodesInFrontier, i)
-				}
 			}
 		}
 		mergedIntents = localIntents
 	}
 
+	nextStates := make([]CurrentState, len(mergedIntents))
+	i := 0
+	for _, agentIntent := range mergedIntents {
+
+		// If all the actions are noop then skip creating them
+		skip := true
+		for _, action := range agentIntent {
+			if !bytes.Equal(action.action, actions.NoOpAction) {
+				skip = false
+				break
+			}
+		}
+		if skip {
+			continue
+		}
+		wg.Add(1)
+		goroutineLimiter <- struct{}{}
+		go calcNewState(c, &nextStates[i], agentIntent, nodesInFrontier)
+		i++
+	}
+
 	wg.Wait()
 
-	return nextStates
+	return nextStates[:i]
 }
 
-func calcNewState(currentState, newState *CurrentState, currentIntents []agentIntents, finalIntent agentIntents, nodesInFrontier Visited, agentIndex int) {
-	defer wg.Done()
+func calcNewState(currentState, newState *CurrentState, currentIntents []agentIntents, nodesInFrontier Visited) {
+	defer goroutineCleanupFunc()
 	currentState.copy(newState)
 	for j, action := range currentIntents {
+		newState.Moves = append(newState.Moves, action.action...)
 		if bytes.Equal(action.action, noopIntent.action) {
 			continue
 		}
 		newState.Agents[j].Coordinates = action.agentNewCoor
-		newState.Moves = append(newState.Moves, action.action...)
 
 		if action.boxNewCoor != noopIntent.boxNewCoor {
 			newState.Boxes[action.boxIndex].Coordinates = action.boxNewCoor
 		}
 	}
 
-	if !bytes.Equal(finalIntent.action, noopIntent.action) {
-		newState.Agents[agentIndex].Coordinates = finalIntent.agentNewCoor
-		if finalIntent.boxNewCoor != noopIntent.boxNewCoor {
-			newState.Boxes[finalIntent.boxIndex].Coordinates = finalIntent.boxNewCoor
-		}
-	}
-
-	newState.Moves = append(newState.Moves, finalIntent.action...)
 	newState.Moves = append(newState.Moves, actions.SingleAgentEnd)
 
 	calculateCost(newState, nodesInFrontier)
 }
 
+func goroutineCleanupFunc() {
+	wg.Done()
+	<-goroutineLimiter
+}
+
 func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents [][]agentIntents) {
-	defer wg.Done()
+	defer goroutineCleanupFunc()
 
 	localIntents := []agentIntents{}
 

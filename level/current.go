@@ -2,6 +2,7 @@ package level
 
 import (
 	"errors"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -67,6 +68,7 @@ var (
 	coordManipulation       = []Coordinates{{0, 1}, {0, -1}, {-1, 0}, {1, 0}}
 	pullOrPush              = []actions.PullOrPush{actions.Pull, actions.Push}
 	wg                      = &sync.WaitGroup{}
+	goroutineLimiter        = make(chan struct{}, runtime.NumCPU())
 )
 
 func (c *CurrentState) copy(newState *CurrentState) {
@@ -80,10 +82,10 @@ func (c *CurrentState) copy(newState *CurrentState) {
 
 }
 
-func ExpandSingleAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState {
+func ExpandSingleAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 	agentIndex := 0
 	agent := c.Agents[0]
-	nextStates := []*CurrentState{}
+	nextStates := []CurrentState{}
 	agentCoor := agent.Coordinates
 
 	for coordIndex, move := range coordManipulation {
@@ -99,7 +101,7 @@ func ExpandSingleAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState
 		if c.LevelInfo.IsCellFree(newCoor, c) {
 			newState.Agents[agentIndex].Coordinates = newCoor
 			newState.Moves = append(newState.Moves, actions.Move(directionForCoordinates[coordIndex], actions.SingleAgentEnd)...)
-			addStateToStatesToExplore(&nextStates, &newState, nodesInFrontier)
+			addStateToStatesToExplore(&nextStates, newState, nodesInFrontier)
 
 			continue
 		}
@@ -116,7 +118,7 @@ func ExpandSingleAgent(nodesInFrontier Visited, c *CurrentState) []*CurrentState
 	return nextStates
 }
 
-func expandBoxMoves(state *CurrentState, nextStates *[]*CurrentState, boxCoorToMove *Coordinates, boxCoordIndex, agentIndex int, nodesVisited Visited) {
+func expandBoxMoves(state *CurrentState, nextStates *[]CurrentState, boxCoorToMove *Coordinates, boxCoordIndex, agentIndex int, nodesVisited Visited) {
 	// Prealloc variables
 	var (
 		isPush bool
@@ -162,7 +164,7 @@ func expandBoxMoves(state *CurrentState, nextStates *[]*CurrentState, boxCoorToM
 			copyOfState.Agents[agentIndex].Coordinates = agentCoor
 			copyOfState.Boxes[boxIndex].Coordinates = boxCoor
 
-			addStateToStatesToExplore(nextStates, &copyOfState, nodesVisited)
+			addStateToStatesToExplore(nextStates, copyOfState, nodesVisited)
 		}
 	}
 }
@@ -189,12 +191,12 @@ func calculateCostWithGoroutine(newState *CurrentState, nodesVisited Visited) {
 	calculateCost(newState, nodesVisited)
 }
 
-func addStateToStatesToExplore(nextStates *[]*CurrentState, newState *CurrentState, nodesVisited Visited) {
+func addStateToStatesToExplore(nextStates *[]CurrentState, newState CurrentState, nodesVisited Visited) {
 	wg.Add(1)
 
 	*nextStates = append(*nextStates, newState)
 
-	go calculateCostWithGoroutine(newState, nodesVisited)
+	go calculateCostWithGoroutine(&(*nextStates)[len(*nextStates)-1], nodesVisited)
 }
 
 func (c *CurrentState) FindBoxAt(coord Coordinates) int {
