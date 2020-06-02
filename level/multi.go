@@ -30,43 +30,49 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 		go c.figureOutAgentMovements(agentIndex, intents)
 	}
 
-	hasConflict, skipAppend := false, false
+	hasConflict := false
 
 	wg.Wait()
+
+	// Start merging all agent actions
+	// TODO: merge things in parallel
 	mergedIntents := make([][]agentIntents, len(intents[0]))
 
+	// Copy actions from 1st agent to the merged intents
 	for i := 0; i < len(intents[0]); i++ {
 		mergedIntents[i] = []agentIntents{intents[0][i]}
 	}
 
-	for i := 1; i < len(intents); i++ {
+	// Merge the actions for the rest of the agents on the first agent
+	for currentAgentIndex := 1; currentAgentIndex < len(intents); currentAgentIndex++ {
+		// tmp list to hold the new merged intents
 		localIntents := [][]agentIntents{}
 
-		for _, firstElement := range mergedIntents {
-			if len(intents[i]) == 0 {
-				intents[i] = []agentIntents{noopIntent}
-			}
-			for _, secondElement := range intents[i] {
-				skipAppend = false
+		for _, intentsFromOtherAgents := range mergedIntents {
 
-				if secondElement.agentNewCoor != noopIntent.agentNewCoor {
-					// Check if there is a conflict
-					for _, action := range firstElement {
-						hasConflict = action.agentNewCoor == secondElement.agentNewCoor ||
-							action.agentNewCoor == secondElement.boxNewCoor ||
-							action.boxNewCoor == secondElement.agentNewCoor ||
-							action.boxNewCoor == secondElement.boxNewCoor
+			// If the current agent doesn't have any actions, add noop action
+			if len(intents[currentAgentIndex]) == 0 {
+				intents[currentAgentIndex] = []agentIntents{noopIntent}
+			}
+
+			for _, intentToAdd := range intents[currentAgentIndex] {
+
+				if intentToAdd.agentNewCoor != noopIntent.agentNewCoor {
+					// Check if there is a conflict and handle it
+					for _, action := range intentsFromOtherAgents {
+						hasConflict = action.agentNewCoor == intentToAdd.agentNewCoor ||
+							action.agentNewCoor == intentToAdd.boxNewCoor ||
+							action.boxNewCoor == intentToAdd.agentNewCoor ||
+							action.boxNewCoor == intentToAdd.boxNewCoor
 
 						if hasConflict {
-							localIntents = append(localIntents, []agentIntents{action, noopIntent}, []agentIntents{noopIntent, secondElement})
-
-							skipAppend = true
+							localIntents = append(localIntents, []agentIntents{action, noopIntent}, []agentIntents{noopIntent, intentToAdd})
 						}
 					}
 				}
-
-				if !skipAppend {
-					localIntents = append(localIntents, append(firstElement, secondElement))
+				// If we didn't find a conflict, then just merge the moves
+				if !hasConflict {
+					localIntents = append(localIntents, append(intentsFromOtherAgents, intentToAdd))
 				}
 			}
 		}
