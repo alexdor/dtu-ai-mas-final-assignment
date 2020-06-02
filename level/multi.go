@@ -87,8 +87,8 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 		if skip {
 			continue
 		}
-		wg.Add(1)
-		goroutineLimiter <- struct{}{}
+
+		goroutineCall()
 		go calcNewState(c, &nextStates[i], agentIntent, nodesInFrontier)
 		i++
 	}
@@ -116,11 +116,6 @@ func calcNewState(currentState, newState *CurrentState, currentIntents []agentIn
 	newState.Moves = append(newState.Moves, actions.SingleAgentEnd)
 
 	calculateCost(newState, nodesInFrontier)
-}
-
-func goroutineCleanupFunc() {
-	wg.Done()
-	<-goroutineLimiter
 }
 
 func (c *CurrentState) figureOutAgentMovements(agentIndex int, intents [][]agentIntents) {
