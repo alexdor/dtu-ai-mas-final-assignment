@@ -1,8 +1,8 @@
-name: golang-reviewdog
+name: golang-golangci
 on: pull_request
 jobs:
-  golangci-lint:
-    name: golangci-lint
+  golangci-lint-job:
+    name: golangci
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory
