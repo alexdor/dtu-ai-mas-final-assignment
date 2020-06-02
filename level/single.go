@@ -2,7 +2,6 @@ package level
 
 import (
 	"github.com/alexdor/dtu-ai-mas-final-assignment/actions"
-	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
 )
 
 func ExpandSingleAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
@@ -54,7 +53,7 @@ func expandBoxMoves(state *CurrentState, nextStates []CurrentState, boxCoorToMov
 		boxCoor Coordinates
 	)
 
-	boxIndex := state.FindBoxAt(*boxCoorToMove)
+	boxIndex := state.findBoxAt(*boxCoorToMove)
 	currentBoxCoor := state.Boxes[boxIndex].Coordinates
 
 	currentAgentCoord := state.Agents[0].Coordinates
@@ -118,16 +117,4 @@ func calculateAgentBoxMove(params boxMoveCalc) {
 
 	calculateCost(params.newState, params.nodesVisited)
 
-}
-
-func (c *CurrentState) FindBoxAt(coord Coordinates) int {
-	for i, box := range c.Boxes {
-		if box.Coordinates == coord {
-			return i
-		}
-	}
-
-	communication.Error(ErrFailedToFindBox)
-
-	return -1
 }
