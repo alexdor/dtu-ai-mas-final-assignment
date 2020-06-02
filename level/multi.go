@@ -161,7 +161,7 @@ func expandMABoxMoves(state *CurrentState, boxCoorToMove *Coordinates, boxCoordI
 		boxCoor Coordinates
 	)
 
-	boxIndex := state.FindBoxAt(*boxCoorToMove)
+	boxIndex := state.findBoxAt(*boxCoorToMove)
 	currentBoxCoor := state.Boxes[boxIndex].Coordinates
 
 	currentAgentCoord := state.Agents[agentIndex].Coordinates
