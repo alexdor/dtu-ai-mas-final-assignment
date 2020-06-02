@@ -20,13 +20,13 @@ type (
 
 	AStart struct{}
 
-	StateChildren []*level.CurrentState
+	StateChildren []level.CurrentState
 )
 
 // Sort interface implementation
 func (s StateChildren) Less(i, j int) bool { return s[i].Cost < s[j].Cost }
 func (s StateChildren) Len() int           { return len(s) }
-func (s StateChildren) Swap(i, j int)      { *s[i], *s[j] = *s[j], *s[i] }
+func (s StateChildren) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
 func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) actions.Action {
 	expand := level.ExpandSingleAgent
@@ -68,20 +68,20 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 			// If the above changes, this is going to lead to a race condition
 			if _, ok := NodesVisited[child.ID]; !ok {
 				if el == nil {
-					queue.PushBack(*child)
+					queue.PushBack(child)
 					continue
 				}
 				NodesVisited[child.ID] = struct{}{}
 				cost := child.Cost
 				for {
 					if cost < el.Value.(level.CurrentState).Cost {
-						queue.InsertBefore(*child, el)
+						queue.InsertBefore(child, el)
 						break
 					}
 
 					el = el.Next()
 					if el == nil {
-						queue.PushBack(*child)
+						queue.PushBack(child)
 						break
 					}
 				}
