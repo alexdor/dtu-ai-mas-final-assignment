@@ -132,15 +132,17 @@ func (c *CurrentState) CalculateCost() {
 	}
 }
 
-func goroutineCleanupFunc() {
+func cleanupAfterGoroutine() {
+
 	wg.Done()
 	<-goroutineLimiter
 }
 
-func goroutineCall() {
+func waitGoroutineToFreeUp() {
 	wg.Add(1)
 	goroutineLimiter <- struct{}{}
 }
+
 func coordToDirection(oldCoord, newCoord Coordinates) actions.Direction {
 	tmp := Coordinates{newCoord[0] - oldCoord[0], newCoord[1] - oldCoord[1]}
 	for i := range coordManipulation {
