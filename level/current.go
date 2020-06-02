@@ -36,12 +36,7 @@ func (c *CurrentState) GetID() ID {
 func generateID(s *strings.Builder, agentOrBox []NodeOrAgent) {
 	for _, value := range agentOrBox {
 
-		err := s.WriteByte(value.Letter)
-		if err != nil {
-			communication.Error(err)
-		}
-
-		_, err = s.WriteString(strconv.Itoa(int(value.Coordinates[0])))
+		_, err := s.WriteString(strconv.Itoa(int(value.Coordinates[0])))
 		if err != nil {
 			communication.Error(err)
 		}
