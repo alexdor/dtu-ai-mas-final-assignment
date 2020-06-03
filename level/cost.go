@@ -36,7 +36,7 @@ func CalculateAggregatedCost(currentState *CurrentState) int {
 }
 
 func ManhattanPlusPlus(first, second Coordinates, state *CurrentState, box *NodeOrAgent) int {
-	diff := manhattenDistance(first, second)
+	diff := ManhattenDistance(first, second)
 	if diff == 0 {
 		return 0
 	}
@@ -58,7 +58,7 @@ func ManhattanPlusPlus(first, second Coordinates, state *CurrentState, box *Node
 	return diff
 }
 
-func manhattenDistance(first, second Coordinates) int {
+func ManhattenDistance(first, second Coordinates) int {
 	return abs(first[0]-second[0]) + abs(first[1]-second[1])
 }
 
