@@ -23,7 +23,7 @@ start-debug:
 	@bash -c 'go build . && DEBUG=true java -jar server.jar -l $(LEVEL) -c "./dtu-ai-mas-final-assignment" -g'
 
 profile:
-	@bash -c 'go build . && java -jar server.jar -l $(LEVEL) -c "./dtu-ai-mas-final-assignment -cpuprofile cpu.prof"'
+	@bash -c 'go build . && java -jar server.jar -l $(LEVEL) -c "./dtu-ai-mas-final-assignment -cpuprofile cpu.prof -memprofile mem.prof"'
 
 debug:
 	@bash -c "dlv attach --api-version 2 --headless --listen=:2345 `pgrep dtu-ai-mas-final-assignment` ./dtu-ai-mas-final-assignment"
