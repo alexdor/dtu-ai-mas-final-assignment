@@ -31,8 +31,9 @@ type (
 		WallRows               ContinuosWalls // key: row, values list of y small and y big sorted based on y small
 		LevelInfo              map[string]string
 		GoalCount              int
-		AgentColor             SimpleMap
-		BoxColor               SimpleMap
+		BytesUsedForBoxes      int
+		TotalBytesForID        int
+		BoxColor, AgentColor   SimpleMap
 		MaxCoord               Coordinates
 		WallsCoordinates       CoordinatesLookup
 		InGameWallsCoordinates []Coordinates // Sorted based on row
