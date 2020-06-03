@@ -175,6 +175,11 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 }
 
 func assignAgentsToBoxes(levelInfo *level.Info, state *level.CurrentState, boxGoalAssignment []level.Coordinates, agentBoxAssignment map[byte][]int) {
+	isSingleAgent := len(state.Agents) == 1
+	if isSingleAgent {
+		return
+	}
+
 	for boxIndex, box := range state.Boxes {
 		boxColor := levelInfo.BoxColor[box.Letter]
 		minCost := math.MaxInt64
