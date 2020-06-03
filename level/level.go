@@ -12,6 +12,8 @@ type (
 
 	IntrestingCoordinates map[byte][]Coordinates
 
+	AgentToBoxesLookup map[byte][]int
+
 	NodeOrAgent struct {
 		Letter byte
 		Coordinates
@@ -31,6 +33,7 @@ type (
 		InGameWallsCoordinates []Coordinates
 		GoalCoordinates        IntrestingCoordinates
 		BoxGoalAssignment      []Coordinates
+		AgentBoxAssignment     AgentToBoxesLookup
 	}
 )
 
