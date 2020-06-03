@@ -161,6 +161,11 @@ func preproccessLvl(levelInfo *level.Info, state *level.CurrentState) {
 				inGameWalls = append(inGameWalls, key)
 			}
 		}
+
+		// Sort inGameWalls based on row
+		sort.Slice(inGameWalls, func(i, j int) bool {
+			return inGameWalls[i][0] < inGameWalls[j][0]
+		})
 	}()
 
 	wg.Wait()

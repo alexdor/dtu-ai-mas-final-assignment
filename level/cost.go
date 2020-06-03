@@ -98,6 +98,9 @@ func calculateWallsCost(boxCoordinates Coordinates, goalCoordinates Coordinates,
 		isWallCoordWithinRectangle = isWallXcoordWithinRectangle && isWallYcoordWithinRectangle
 
 		if !isWallCoordWithinRectangle {
+			if wallCoordinate[0] > bigXcoord {
+				break
+			}
 			continue
 		}
 
