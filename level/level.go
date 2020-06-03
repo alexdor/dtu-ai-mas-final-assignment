@@ -24,13 +24,14 @@ type (
 	Info struct {
 		LevelInfo              map[string]string
 		GoalCount              int
-		AgentColor             SimpleMap
-		BoxColor               SimpleMap
+		BytesUsedForBoxes      int
+		TotalBytesForID        int
+		BoxColor, AgentColor   SimpleMap
 		MaxCoord               Coordinates
 		WallsCoordinates       CoordinatesLookup
+		BoxGoalAssignment      []Coordinates
 		InGameWallsCoordinates []Coordinates
 		GoalCoordinates        IntrestingCoordinates
-		BoxGoalAssignment      []Coordinates
 	}
 )
 

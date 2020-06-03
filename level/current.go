@@ -1,17 +1,20 @@
 package level
 
 import (
+	"encoding/binary"
 	"errors"
 	"runtime"
-	"strconv"
-	"strings"
 	"sync"
+	"unsafe"
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/actions"
 	"github.com/alexdor/dtu-ai-mas-final-assignment/communication"
+	"github.com/alexdor/dtu-ai-mas-final-assignment/config"
 )
 
-var ErrFailedToFindBox = errors.New("Failed to find box")
+var (
+	ErrFailedToFindBox = errors.New("Failed to find box")
+)
 
 type CurrentState struct {
 	Boxes     []NodeOrAgent
@@ -22,39 +25,37 @@ type CurrentState struct {
 	ID
 }
 
+// This is an unsafe convertion of a byte array to string
+// it's copied from go's string builder implementation
+// https://golang.org/src/strings/builder.go#L46
+func unsafeByteArrayToID(id []byte) ID {
+	return ID(*(*string)(unsafe.Pointer(&id)))
+}
+
 func (c *CurrentState) GetID() ID {
 	if len(c.ID) == 0 {
-		var s strings.Builder
-		generateID(&s, c.Boxes)
-		generateID(&s, c.Agents)
-		c.ID = ID(s.String())
+		id := make([]byte, c.LevelInfo.TotalBytesForID)
+
+		generateID(id[:c.LevelInfo.BytesUsedForBoxes], c.Boxes)
+		generateID(id[c.LevelInfo.BytesUsedForBoxes:], c.Agents)
+
+		c.ID = unsafeByteArrayToID(id)
 	}
 
 	return c.ID
 }
 
-func generateID(s *strings.Builder, agentOrBox []NodeOrAgent) {
-	for _, value := range agentOrBox {
-
-		_, err := s.WriteString(strconv.Itoa(int(value.Coordinates[0])))
-		if err != nil {
-			communication.Error(err)
+func generateID(id []byte, agentOrBox []NodeOrAgent) {
+	var startIndex int
+	for i, value := range agentOrBox {
+		startIndex = 1 + i*config.BytesUsedForEachAgentOrBox
+		if i == 0 {
+			startIndex = 0
 		}
+		binary.LittleEndian.PutUint32(id[startIndex:], uint32(value.Coordinates[0]))
 
-		err = s.WriteByte(',')
-		if err != nil {
-			communication.Error(err)
-		}
+		binary.LittleEndian.PutUint32(id[startIndex+config.BytesUsedForEachPoint:], uint32(value.Coordinates[1]))
 
-		_, err = s.WriteString(strconv.Itoa(int(value.Coordinates[1])))
-		if err != nil {
-			communication.Error(err)
-		}
-
-		err = s.WriteByte(' ')
-		if err != nil {
-			communication.Error(err)
-		}
 	}
 }
 
