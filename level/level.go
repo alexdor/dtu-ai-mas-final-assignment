@@ -30,7 +30,7 @@ type (
 		BoxColor               SimpleMap
 		MaxCoord               Coordinates
 		WallsCoordinates       CoordinatesLookup
-		InGameWallsCoordinates []Coordinates
+		InGameWallsCoordinates []Coordinates // Sorted based on row
 		GoalCoordinates        IntrestingCoordinates
 		BoxGoalAssignment      []Coordinates
 		AgentBoxAssignment     AgentToBoxesLookup
