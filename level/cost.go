@@ -29,27 +29,24 @@ func CalculateAggregatedCost(currentState *CurrentState) int {
 		}
 		goal := goals[goalIndex]
 
-		aggregatedCost += ManhattanPlusPlus(box.Coordinates, goal, currentState, &box)
+		manHattanCost := ManhattanPlusPlus(box.Coordinates, goal, currentState, &box)
+		aggregatedCost += manHattanCost
+
+		isManhattanCostZero := manHattanCost == 0
+		if isManhattanCostZero {
+			continue
+		}
+
+		aggregatedCost += calculateAgentsToBoxCost(currentState, &box)
 	}
 
 	return aggregatedCost
 }
 
 func ManhattanPlusPlus(first, second Coordinates, state *CurrentState, box *NodeOrAgent) int {
-	diff := ManhattenDistance(first, second)
+	diff := manhattenDistance(first, second)
 	if diff == 0 {
 		return 0
-	}
-
-	boxColor := state.LevelInfo.BoxColor[box.Letter]
-
-	for _, agent := range state.Agents {
-		isAgentAndBoxTogetherLikeBros := state.LevelInfo.AgentColor[agent.Letter] == boxColor
-		if !isAgentAndBoxTogetherLikeBros {
-			continue
-		}
-
-		diff += ManhattenDistance(box.Coordinates, agent.Coordinates)
 	}
 
 	diff += calculateWallsCost(first, second, state)
@@ -57,7 +54,7 @@ func ManhattanPlusPlus(first, second Coordinates, state *CurrentState, box *Node
 	return diff
 }
 
-func ManhattenDistance(first, second Coordinates) int {
+func manhattenDistance(first, second Coordinates) int {
 	return abs(first[0]-second[0]) + abs(first[1]-second[1])
 }
 
@@ -114,4 +111,20 @@ func abs(x int) int {
 	}
 
 	return x
+}
+
+func calculateAgentsToBoxCost(state *CurrentState, box *NodeOrAgent) int {
+	cost := 0
+	boxColor := state.LevelInfo.BoxColor[box.Letter]
+
+	for _, agent := range state.Agents {
+		isAgentAndBoxTogetherLikeBros := state.LevelInfo.AgentColor[agent.Letter] == boxColor
+		if !isAgentAndBoxTogetherLikeBros {
+			continue
+		}
+
+		cost += manhattenDistance(box.Coordinates, agent.Coordinates)
+	}
+
+	return cost
 }

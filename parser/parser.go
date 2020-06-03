@@ -199,7 +199,7 @@ func assignAgentsToBoxes(levelInfo *level.Info, state *level.CurrentState, boxGo
 				coordsToConsider = boxGoalAssignment[boxesAssignedToAgent[len(boxesAssignedToAgent)-1]]
 			}
 
-			cost := level.ManhattenDistance(coordsToConsider, box.Coordinates)
+			cost := level.ManhattanPlusPlus(coordsToConsider, box.Coordinates, state, &box)
 
 			if cost < minCost {
 				minCost = cost
