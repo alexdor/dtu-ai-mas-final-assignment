@@ -165,9 +165,55 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 
 	wg.Wait()
 
+	agentBoxAssignment := make(map[byte][]int)
+
+	func() {
+		isSingleAgent := len(state.Agents) == 1
+		if isSingleAgent {
+			agentLetter := state.Agents[0].Letter
+
+			for boxIndex, _ := range state.Boxes {
+				agentBoxAssignment[agentLetter] = append(agentBoxAssignment[agentLetter], boxIndex)
+			}
+
+			return
+		}
+
+		for boxIndex, box := range state.Boxes {
+			boxColor := levelInfo.BoxColor[box.Letter]
+			minCost := math.MaxInt64
+
+			var agentWithLowestCost byte
+
+			for _, agent := range state.Agents {
+				isBoxMoveableByAgent := levelInfo.AgentColor[agent.Letter] == boxColor
+				if !isBoxMoveableByAgent {
+					continue
+				}
+
+				coordsToConsider := agent.Coordinates
+
+				boxesAssignedToAgent, isAnotherBoxAssignedToAgent := agentBoxAssignment[agent.Letter]
+				if isAnotherBoxAssignedToAgent {
+					coordsToConsider = boxGoalAssignment[boxesAssignedToAgent[len(boxesAssignedToAgent)-1]]
+				}
+
+				cost := level.ManhattanPlusPlus(coordsToConsider, box.Coordinates, state, &box)
+
+				if cost < minCost {
+					minCost = cost
+					agentWithLowestCost = agent.Letter
+				}
+			}
+
+			agentBoxAssignment[agentWithLowestCost] = append(agentBoxAssignment[agentWithLowestCost], boxIndex)
+		}
+	}()
+
 	levelInfo.GoalCount = goalCount
 	levelInfo.InGameWallsCoordinates = inGameWalls
 	levelInfo.BoxGoalAssignment = boxGoalAssignment
+	levelInfo.AgentBoxAssignment = agentBoxAssignment
 }
 
 func parseMode(mode, msg string, row level.Point, levelInfo *level.Info, currentState *level.CurrentState) {
