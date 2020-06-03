@@ -50,6 +50,7 @@ func ManhattanPlusPlus(first, second Coordinates, state *CurrentState, box *Node
 		}
 
 		diff += manhattenDistance(box.Coordinates, agent.Coordinates)
+		diff += calculateWallsCost(agent.Coordinates, box.Coordinates, state)
 	}
 
 	diff += calculateWallsCost(first, second, state)
