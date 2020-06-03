@@ -90,11 +90,12 @@ func calculateWallsCost(boxCoordinates Coordinates, goalCoordinates Coordinates,
 	if !isAreaCheckable {
 		return 0
 	}
+	var isWallXcoordWithinRectangle, isWallYcoordWithinRectangle, isWallCoordWithinRectangle bool
 
 	for _, wallCoordinate := range currentState.LevelInfo.InGameWallsCoordinates {
-		isWallXcoordWithinRectangle := wallCoordinate[0] > smallXcoord && wallCoordinate[0] < bigXcoord
-		isWallYcoordWithinRectangle := wallCoordinate[1] > smallYcoord && wallCoordinate[1] < bigYcoord
-		isWallCoordWithinRectangle := isWallXcoordWithinRectangle && isWallYcoordWithinRectangle
+		isWallXcoordWithinRectangle = wallCoordinate[0] > smallXcoord && wallCoordinate[0] < bigXcoord
+		isWallYcoordWithinRectangle = wallCoordinate[1] > smallYcoord && wallCoordinate[1] < bigYcoord
+		isWallCoordWithinRectangle = isWallXcoordWithinRectangle && isWallYcoordWithinRectangle
 
 		if !isWallCoordWithinRectangle {
 			continue
