@@ -172,7 +172,7 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 		if isSingleAgent {
 			agentLetter := state.Agents[0].Letter
 
-			for boxIndex, _ := range state.Boxes {
+			for boxIndex := range state.Boxes {
 				agentBoxAssignment[agentLetter] = append(agentBoxAssignment[agentLetter], boxIndex)
 			}
 
