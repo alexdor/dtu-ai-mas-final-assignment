@@ -198,7 +198,7 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 					coordsToConsider = boxGoalAssignment[boxesAssignedToAgent[len(boxesAssignedToAgent)-1]]
 				}
 
-				cost := level.ManhattanPlusPlus(coordsToConsider, box.Coordinates, state, &box)
+				cost := level.ManhattenDistance(coordsToConsider, box.Coordinates)
 
 				if cost < minCost {
 					minCost = cost
