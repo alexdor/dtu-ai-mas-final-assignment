@@ -34,14 +34,13 @@ func CalculateAggregatedCost(currentState *CurrentState) int {
 		goal := goals[goalIndex]
 
 		manHattanCost := ManhattanPlusPlus(box.Coordinates, goal, currentState, &box)
-		aggregatedCost += manHattanCost
 
 		isManhattanCostZero := manHattanCost == 0
 		if isManhattanCostZero {
 			continue
 		}
+		aggregatedCost += manHattanCost
 
-		aggregatedCost += calculateAgentsToBoxCost(currentState, &box)
 	}
 
 	return aggregatedCost
