@@ -66,7 +66,7 @@ func findCloserBox(coords level.Coordinates, char byte, boxes []level.NodeOrAgen
 			continue
 		}
 
-		cost := level.ManhattanPlusPlus(coords, box.Coordinates, state, &box)
+		cost := level.ManhattanPlusPlus(coords, box.Coordinates, state, &box, i)
 		if cost < minDist {
 			minDist = cost
 			pos = i
@@ -232,7 +232,7 @@ func assignAgentsToBoxes(levelInfo *level.Info, state *level.CurrentState, boxGo
 				coordsToConsider = boxGoalAssignment[boxesAssignedToAgent[len(boxesAssignedToAgent)-1]]
 			}
 
-			cost := level.ManhattanPlusPlus(coordsToConsider, box.Coordinates, state, &box)
+			cost := level.ManhattanPlusPlus(coordsToConsider, box.Coordinates, state, &box, boxIndex)
 
 			if cost < minCost {
 				minCost = cost
