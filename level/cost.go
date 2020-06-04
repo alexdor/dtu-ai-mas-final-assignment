@@ -86,13 +86,10 @@ func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, current
 		return 0
 	}
 
-	return max(
-		rowOrColWallCalc(
-			smallXcoord, bigXcoord, smallYcoord, bigYcoord, currentState.LevelInfo.WallRows,
-		),
-		rowOrColWallCalc(
-			smallYcoord, bigYcoord, smallXcoord, bigXcoord, currentState.LevelInfo.WallColumns,
-		),
+	return rowOrColWallCalc(
+		smallXcoord, bigXcoord, smallYcoord, bigYcoord, currentState.LevelInfo.WallRows,
+	) + rowOrColWallCalc(
+		smallYcoord, bigYcoord, smallXcoord, bigXcoord, currentState.LevelInfo.WallColumns,
 	)
 }
 
