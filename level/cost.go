@@ -52,17 +52,7 @@ func ManhattanPlusPlus(first, second Coordinates, state *CurrentState, box *Node
 		return 0
 	}
 
-	boxColor := state.LevelInfo.BoxColor[box.Letter]
-
-	for _, agent := range state.Agents {
-		isAgentAndBoxTogetherLikeBros := state.LevelInfo.AgentColor[agent.Letter] == boxColor
-		if !isAgentAndBoxTogetherLikeBros {
-			continue
-		}
-
-		diff += manhattenDistance(box.Coordinates, agent.Coordinates)
-		diff += calculateWallsCost(agent.Coordinates, box.Coordinates, state)
-	}
+	diff += calculateAgentsToBoxCost(state, box)
 
 	diff += calculateWallsCost(first, second, state)
 
