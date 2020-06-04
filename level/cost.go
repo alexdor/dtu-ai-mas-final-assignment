@@ -85,7 +85,7 @@ func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, current
 	if !isAreaCheckable {
 		return 0
 	}
-
+	cost := 0
 	for x := smallXcoord; x <= bigXcoord; x++ {
 		wallColumns, ok := currentState.LevelInfo.WallRows[x]
 		if !ok {
@@ -100,13 +100,16 @@ func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, current
 
 			// Wall expands the full length
 			if wallY[0] <= smallYcoord && wallY[1] >= bigYcoord {
-				return min(smallYcoord-wallY[0], wallY[1]-bigYcoord) + additionalWallCostForFullRow
+				newCost := min(smallYcoord-wallY[0], wallY[1]-bigYcoord) + additionalWallCostForFullRow
+				if newCost > cost {
+					cost = newCost
+				}
 			}
 
 		}
 	}
 
-	return 0
+	return cost
 }
 
 func min(x, y int) int {
