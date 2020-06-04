@@ -63,6 +63,9 @@ func manhattenDistance(first, second Coordinates) int {
 }
 
 func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, currentState *CurrentState) int {
+	if len(currentState.LevelInfo.InGameWallsCoordinates) == 0 {
+		return 0
+	}
 	isXcoordOfBoxSmallest := firstCoordinates[0] < secondCoordinates[0]
 	isYcoordOfBoxSmallest := firstCoordinates[1] < secondCoordinates[1]
 
