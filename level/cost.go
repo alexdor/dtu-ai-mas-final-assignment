@@ -128,30 +128,12 @@ func abs(x int) int {
 func calculateAgentsToBoxCost(state *CurrentState, box *NodeOrAgent, boxIndex int) int {
 	cost := 0
 	agent := state.Agents[0]
-	isAgentAndBoxTogetherLikeBros := false
+	isAgentAndBoxTogetherLikeBros := true
 
 	if state.LevelInfo.IsSingleAgent {
-
 		isAgentAndBoxTogetherLikeBros = state.LevelInfo.AgentColor[agent.Letter] == state.LevelInfo.BoxColor[box.Letter]
-
 	} else {
-
-	outer:
-		for agentLetter, boxIndexes := range state.LevelInfo.AgentBoxAssignment {
-			for _, indexOfBox := range boxIndexes {
-				if indexOfBox == boxIndex {
-					for _, stateAgent := range state.Agents {
-						if agentLetter == stateAgent.Letter {
-							agent = stateAgent
-							isAgentAndBoxTogetherLikeBros = true
-							break outer
-						}
-					}
-					break outer
-				}
-			}
-
-		}
+		agent = state.Agents[state.LevelInfo.BoxIndexToAgentIndex[boxIndex]]
 	}
 
 	if !isAgentAndBoxTogetherLikeBros {
