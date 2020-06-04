@@ -78,15 +78,7 @@ func findCloserBox(coords level.Coordinates, char byte, boxes []level.NodeOrAgen
 
 func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 	wg := &sync.WaitGroup{}
-	wg.Add(2)
-
-	// Make sure agents are sorted
-	go func() {
-		defer wg.Done()
-		sort.Slice(state.Agents, func(i, j int) bool {
-			return state.Agents[i].Letter < state.Agents[j].Letter
-		})
-	}()
+	wg.Add(1)
 
 	var moveableBoxes []level.NodeOrAgent
 	go func() {
@@ -112,6 +104,11 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 			moveableBoxes = append(moveableBoxes, box)
 		}
 	}()
+
+	// Make sure agents are sorted
+	sort.Slice(state.Agents, func(i, j int) bool {
+		return state.Agents[i].Letter < state.Agents[j].Letter
+	})
 
 	goalCount := 0
 	inGameWalls := []level.Coordinates{}
