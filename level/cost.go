@@ -85,9 +85,21 @@ func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, current
 	if !isAreaCheckable {
 		return 0
 	}
+
+	return max(
+		rowOrColWallCalc(
+			smallXcoord, bigXcoord, smallYcoord, bigYcoord, currentState.LevelInfo.WallRows,
+		),
+		rowOrColWallCalc(
+			smallYcoord, bigYcoord, smallXcoord, bigXcoord, currentState.LevelInfo.WallColumns,
+		),
+	)
+}
+
+func rowOrColWallCalc(smallXcoord, bigXcoord, smallYcoord, bigYcoord int, walls ContinuosWalls) int {
 	cost := 0
 	for x := smallXcoord; x <= bigXcoord; x++ {
-		wallColumns, ok := currentState.LevelInfo.WallRows[x]
+		wallColumns, ok := walls[x]
 		if !ok {
 			continue
 		}
@@ -114,6 +126,14 @@ func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, current
 
 func min(x, y int) int {
 	if x < y {
+		return x
+	}
+
+	return y
+}
+
+func max(x, y int) int {
+	if x > y {
 		return x
 	}
 
