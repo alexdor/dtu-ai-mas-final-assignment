@@ -4,7 +4,9 @@ type Cost interface {
 	Calculate(*CurrentState) int
 }
 
-const wallPenaltySize = 4
+// This is the cost that should be added to the total cost
+// when there is a full row of walls
+const additionalWallCostForFullRow = 2
 
 type ManhattanDistance struct{}
 
@@ -97,8 +99,8 @@ func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, current
 			}
 
 			// Wall expands the full length
-			if wallY[0] < smallYcoord && wallY[1] > bigYcoord {
-				return min(smallYcoord-wallY[0], wallY[1]-bigYcoord) + 1
+			if wallY[0] <= smallYcoord && wallY[1] >= bigYcoord {
+				return min(smallYcoord-wallY[0], wallY[1]-bigYcoord) + additionalWallCostForFullRow
 			}
 
 		}
