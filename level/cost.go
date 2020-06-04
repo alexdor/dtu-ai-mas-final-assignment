@@ -140,7 +140,23 @@ func calculateAgentsToBoxCost(state *CurrentState, box *NodeOrAgent, boxIndex in
 	if state.LevelInfo.IsSingleAgent {
 		isAgentAndBoxTogetherLikeBros = state.LevelInfo.AgentColor[agent.Letter] == state.LevelInfo.BoxColor[box.Letter]
 	} else {
-		agent = state.Agents[state.LevelInfo.BoxIndexToAgentIndex[boxIndex]]
+		agentIndex, ok := state.LevelInfo.BoxIndexToAgentIndex[boxIndex]
+		if !ok || agentIndex < 0 {
+		outer:
+			for agentLetter, boxIndexes := range state.LevelInfo.AgentBoxAssignment {
+				for _, indexOfBox := range boxIndexes {
+					if indexOfBox == boxIndex {
+						for _, stateAgent := range state.Agents {
+							if agentLetter == stateAgent.Letter {
+								agent = stateAgent
+								break outer
+							}
+						}
+					}
+				}
+			}
+		}
+		agent = state.Agents[agentIndex]
 	}
 
 	if !isAgentAndBoxTogetherLikeBros {
