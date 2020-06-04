@@ -11,7 +11,10 @@ import (
 	"github.com/alexdor/dtu-ai-mas-final-assignment/level"
 )
 
-var NodesVisited level.Visited
+var (
+	NodesVisited   level.Visited
+	StatesExplored = 0
+)
 
 type (
 	Heuristic interface {
@@ -44,11 +47,13 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 	queue.PushBack(*currentState)
 
 	for node := queue.Front(); node != nil; node = queue.Front() {
+		StatesExplored++
 		value := node.Value.(level.CurrentState)
 		queue.Remove(node)
 
 		if value.IsGoalState() {
-			communication.Log("Goal was found after exploring", len(NodesVisited), "states")
+			communication.Log("Goal was found after exploring", StatesExplored, "states")
+			communication.Log("Generated", len(NodesVisited), "states")
 			if config.IsDebug {
 				communication.Log("Moves", string(value.Moves))
 				communication.Log("Agents Final State", value.Agents)
@@ -89,7 +94,8 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 		}
 	}
 
-	communication.Log("Explored", len(NodesVisited), "states and failed to find a solution")
+	communication.Log("Generated", len(NodesVisited), "states")
+	communication.Log("Explored", StatesExplored, "states and failed to find a solution")
 	os.Exit(1)
 
 	return nil
