@@ -28,20 +28,20 @@ type (
 	ContinuosWalls     map[Point]ContinuosWallCoord
 
 	Info struct {
-		WallRows               ContinuosWalls // key: row, values list of y small and y big sorted based on y small
-		LevelInfo              map[string]string
-		GoalCount              int
-		BytesUsedForBoxes      int
-		TotalBytesForID        int
-		BoxColor, AgentColor   SimpleMap
-		MaxCoord               Coordinates
-		WallsCoordinates       CoordinatesLookup
-		InGameWallsCoordinates []Coordinates // Sorted based on row
-		GoalCoordinates        IntrestingCoordinates
-		BoxGoalAssignment      []Coordinates
-		AgentBoxAssignment     AgentToBoxesLookup
-		BoxIndexToAgentIndex   IndexToIndexMapping
-		IsSingleAgent          bool
+		WallRows                       ContinuosWalls // key: row, values list of y small and y big sorted based on y small
+		LevelInfo                      map[string]string
+		GoalCount                      int
+		BytesUsedForBoxes              int
+		TotalBytesForID                int
+		BoxColor, AgentColor           SimpleMap
+		MaxCoord                       Coordinates
+		WallsCoordinates               CoordinatesLookup
+		InGameWallsCoordinates         []Coordinates // Sorted based on row
+		GoalCoordinates                IntrestingCoordinates
+		BoxGoalAssignment              []Coordinates
+		AgentBoxAssignment             AgentToBoxesLookup
+		BoxIndexToAgentIndex           IndexToIndexMapping
+		IsSingleAgent, ZeroInGameWalls bool
 	}
 )
 

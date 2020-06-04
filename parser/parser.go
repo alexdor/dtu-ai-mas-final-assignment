@@ -164,6 +164,7 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 	levelInfo.TotalBytesForID = levelInfo.BytesUsedForBoxes + len(state.Agents)*config.BytesUsedForEachAgentOrBox + 1
 	levelInfo.GoalCount = goalCount
 	levelInfo.InGameWallsCoordinates = inGameWalls
+	levelInfo.ZeroInGameWalls = len(inGameWalls) == 0
 	levelInfo.BoxGoalAssignment = boxGoalAssignment
 	levelInfo.AgentBoxAssignment = agentBoxAssignment
 	levelInfo.WallRows = wallRows

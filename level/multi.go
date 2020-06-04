@@ -120,10 +120,23 @@ func calcNewState(currentState, newState *CurrentState, currentIntents []agentIn
 func (c *CurrentState) figureOutAgentMovements(agentIndex int, intentToUpdate *[]agentIntents) {
 	defer cleanupAfterGoroutine()
 
-	localIntents := []agentIntents{}
-
 	agent := c.Agents[agentIndex]
+
+	if c.LevelInfo.ZeroInGameWalls {
+		everythinInGoal := true
+		for _, boxIndex := range c.LevelInfo.AgentBoxAssignment[agent.Letter] {
+			if c.LevelInfo.BoxGoalAssignment[boxIndex] != c.Boxes[boxIndex].Coordinates {
+				everythinInGoal = false
+				break
+			}
+		}
+		if everythinInGoal {
+			return
+		}
+	}
+
 	agentCoor := agent.Coordinates
+	localIntents := []agentIntents{}
 
 	for coordIndex, move := range coordManipulation {
 		newCoor := Coordinates{agentCoor[0] + move[0], agentCoor[1] + move[1]}
