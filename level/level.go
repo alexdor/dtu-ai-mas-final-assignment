@@ -27,7 +27,6 @@ type (
 	ContinuosWalls     map[Point]ContinuosWallCoord
 
 	Info struct {
-		// TODO: Add shit to this list, search to find the "biggest" row (if row == rectang size add cost and break) (take into consideration that maybe the agent can go faster "outside" of your rect), finish up this shit
 		WallRows               ContinuosWalls // key: row, values list of y small and y big sorted based on y small
 		LevelInfo              map[string]string
 		GoalCount              int
