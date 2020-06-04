@@ -76,9 +76,8 @@ func findCloserBox(coords level.Coordinates, char byte, boxes []level.NodeOrAgen
 }
 
 func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
-	inGameWalls := []level.Coordinates{}
 	wg := &sync.WaitGroup{}
-	wg.Add(3)
+	wg.Add(2)
 
 	// Make sure agents are sorted
 	go func() {
@@ -113,31 +112,15 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 		}
 	}()
 
-	go func() {
-		defer wg.Done()
-
-		for key := range levelInfo.WallsCoordinates {
-			isEdgeWall := key[0] == 0 || key[1] == 0 || key[0] == levelInfo.MaxCoord[0] || key[1] == levelInfo.MaxCoord[1]
-			if !isEdgeWall {
-				inGameWalls = append(inGameWalls, key)
-			}
-		}
-
-		// Sort inGameWalls based on row
-		sort.Slice(inGameWalls, func(i, j int) bool {
-			return inGameWalls[i][0] < inGameWalls[j][0]
-		})
-	}()
-
 	goalCount := 0
+	inGameWalls := []level.Coordinates{}
 	boxGoalAssignment := make([]level.Coordinates, len(state.Boxes))
 	agentBoxAssignment := make(map[byte][]int)
 
 	wg.Wait()
 	state.Boxes = moveableBoxes
-	levelInfo.InGameWallsCoordinates = inGameWalls
 
-	wg.Add(2)
+	wg.Add(3)
 
 	go func() {
 		defer wg.Done()
@@ -168,13 +151,25 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 				boxGoalAssignment[boxIndex] = coord
 			}
 		}
+	}()
 
-		assignAgentsToBoxes(levelInfo, state, boxGoalAssignment, agentBoxAssignment)
+	go func() {
+		defer wg.Done()
+
+		for key := range levelInfo.WallsCoordinates {
+			isEdgeWall := key[0] == 0 || key[1] == 0 || key[0] == levelInfo.MaxCoord[0] || key[1] == levelInfo.MaxCoord[1]
+			if !isEdgeWall {
+				inGameWalls = append(inGameWalls, key)
+			}
+		}
 	}()
 
 	wg.Wait()
 
+	assignAgentsToBoxes(levelInfo, state, boxGoalAssignment, agentBoxAssignment)
+
 	levelInfo.GoalCount = goalCount
+	levelInfo.InGameWallsCoordinates = inGameWalls
 	levelInfo.BoxGoalAssignment = boxGoalAssignment
 	levelInfo.AgentBoxAssignment = agentBoxAssignment
 }
