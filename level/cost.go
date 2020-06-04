@@ -97,7 +97,7 @@ func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, current
 }
 
 func rowOrColWallCalc(smallXcoord, bigXcoord, smallYcoord, bigYcoord int, walls ContinuosWalls) int {
-	cost := 0
+
 	for x := smallXcoord; x <= bigXcoord; x++ {
 		wallColumns, ok := walls[x]
 		if !ok {
@@ -112,16 +112,14 @@ func rowOrColWallCalc(smallXcoord, bigXcoord, smallYcoord, bigYcoord int, walls 
 
 			// Wall expands the full length
 			if wallY[0] <= smallYcoord && wallY[1] >= bigYcoord {
-				newCost := min(smallYcoord-wallY[0], wallY[1]-bigYcoord) + additionalWallCostForFullRow
-				if newCost > cost {
-					cost = newCost
-				}
+				return min(smallYcoord-wallY[0], wallY[1]-bigYcoord) + additionalWallCostForFullRow
+
 			}
 
 		}
 	}
 
-	return cost
+	return 0
 }
 
 func min(x, y int) int {
