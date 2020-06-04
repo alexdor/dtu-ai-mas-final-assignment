@@ -120,15 +120,10 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 	wg.Wait()
 	state.Boxes = moveableBoxes
 
-	wg.Add(3)
+	wg.Add(2)
 
-	go func() {
-		defer wg.Done()
-
-		for _, v := range levelInfo.GoalCoordinates {
-			goalCount += len(v)
-		}
-	}()
+	wallRows := make(level.ContinuosWalls)
+	go computeInGameWallsAndWallRows(wg, levelInfo, &inGameWalls, wallRows)
 
 	go func() {
 		defer wg.Done()
@@ -153,16 +148,9 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 		}
 	}()
 
-	go func() {
-		defer wg.Done()
-
-		for key := range levelInfo.WallsCoordinates {
-			isEdgeWall := key[0] == 0 || key[1] == 0 || key[0] == levelInfo.MaxCoord[0] || key[1] == levelInfo.MaxCoord[1]
-			if !isEdgeWall {
-				inGameWalls = append(inGameWalls, key)
-			}
-		}
-	}()
+	for _, v := range levelInfo.GoalCoordinates {
+		goalCount += len(v)
+	}
 
 	wg.Wait()
 
@@ -172,6 +160,51 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 	levelInfo.InGameWallsCoordinates = inGameWalls
 	levelInfo.BoxGoalAssignment = boxGoalAssignment
 	levelInfo.AgentBoxAssignment = agentBoxAssignment
+	levelInfo.WallRows = wallRows
+}
+func computeInGameWallsAndWallRows(wg *sync.WaitGroup, levelInfo *level.Info, storeInGameWalls *[]level.Coordinates, wallRows level.ContinuosWalls) {
+	defer wg.Done()
+	var inGameWalls []level.Coordinates
+
+	for key := range levelInfo.WallsCoordinates {
+		isEdgeWall := key[0] == 0 || key[1] == 0 || key[0] == levelInfo.MaxCoord[0] || key[1] == levelInfo.MaxCoord[1]
+		if !isEdgeWall {
+			inGameWalls = append(inGameWalls, key)
+		}
+	}
+
+	// Sort inGameWalls based on row and then based on column
+	sort.Slice(inGameWalls, func(i, j int) bool {
+		return inGameWalls[i][0] < inGameWalls[j][0] || (inGameWalls[i][0] == inGameWalls[j][0] && inGameWalls[i][1] < inGameWalls[j][1])
+	})
+	figureOutWallRows(inGameWalls, wallRows)
+
+	*storeInGameWalls = inGameWalls
+}
+
+func figureOutWallRows(inGameWalls []level.Coordinates, wallRows level.ContinuosWalls) {
+outer:
+	for _, wall := range inGameWalls {
+		rowToAppend, ok := wallRows[wall[0]]
+		// Create new key value pair if it doesn't exits
+		if !ok {
+			wallRows[wall[0]] = level.ContinuosWallCoord{{wall[1], wall[1]}}
+			continue
+		}
+
+		for i := range rowToAppend {
+			// If the current wall is part of the previous box
+			// increase tha "max" var of the wall by one
+			if wall[1]-1 == rowToAppend[i][1] {
+				wallRows[wall[0]][i][1] = rowToAppend[i][1] + 1
+				continue outer
+			}
+		}
+
+		// If the walls isn't connected to previous walls then create a new set
+		wallRows[wall[0]] = append(rowToAppend, [2]level.Point{wall[1], wall[1]})
+
+	}
 }
 
 func assignAgentsToBoxes(levelInfo *level.Info, state *level.CurrentState, boxGoalAssignment []level.Coordinates, agentBoxAssignment map[byte][]int) {
