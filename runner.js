@@ -74,7 +74,6 @@ function main() {
     let solved = null;
 
     child.stderr.on("data", (data) => {
-      console.log(`${data}`);
       childOutput += `${data}`;
     });
     child.stdout.on("data", (data) => {
