@@ -38,6 +38,7 @@ type (
 		GoalCoordinates        IntrestingCoordinates
 		BoxGoalAssignment      []Coordinates
 		AgentBoxAssignment     AgentToBoxesLookup
+		IsSingleAgent          bool
 	}
 )
 

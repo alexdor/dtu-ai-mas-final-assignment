@@ -50,6 +50,7 @@ func ParseLevel() (level.Info, level.CurrentState, error) {
 	}
 
 	levelInfo.MaxCoord = level.Coordinates{row, col}
+	levelInfo.IsSingleAgent = len(currentState.Agents) == 1
 
 	preprocessLvl(&levelInfo, &currentState)
 
@@ -208,8 +209,7 @@ outer:
 }
 
 func assignAgentsToBoxes(levelInfo *level.Info, state *level.CurrentState, boxGoalAssignment []level.Coordinates, agentBoxAssignment map[byte][]int) {
-	isSingleAgent := len(state.Agents) == 1
-	if isSingleAgent {
+	if levelInfo.IsSingleAgent {
 		return
 	}
 
