@@ -4,6 +4,8 @@ type Cost interface {
 	Calculate(*CurrentState) int
 }
 
+const wallPenaltySize = 4
+
 type ManhattanDistance struct{}
 
 func CalculateAggregatedCost(currentState *CurrentState) int {
@@ -58,21 +60,19 @@ func manhattenDistance(first, second Coordinates) int {
 	return abs(first[0]-second[0]) + abs(first[1]-second[1])
 }
 
-func calculateWallsCost(boxCoordinates Coordinates, goalCoordinates Coordinates, currentState *CurrentState) int {
-	wallPenaltySize := 4
+func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, currentState *CurrentState) int {
+	isXcoordOfBoxSmallest := firstCoordinates[0] < secondCoordinates[0]
+	isYcoordOfBoxSmallest := firstCoordinates[1] < secondCoordinates[1]
 
-	isXcoordOfBoxSmallest := boxCoordinates[0] < goalCoordinates[0]
-	isYcoordOfBoxSmallest := boxCoordinates[1] < goalCoordinates[1]
-
-	smallXcoord := boxCoordinates[0]
-	bigXcoord := goalCoordinates[0]
+	smallXcoord := firstCoordinates[0]
+	bigXcoord := secondCoordinates[0]
 
 	if !isXcoordOfBoxSmallest {
 		smallXcoord, bigXcoord = bigXcoord, smallXcoord
 	}
 
-	smallYcoord := boxCoordinates[1]
-	bigYcoord := goalCoordinates[1]
+	smallYcoord := firstCoordinates[1]
+	bigYcoord := secondCoordinates[1]
 
 	if !isYcoordOfBoxSmallest {
 		smallYcoord, bigYcoord = bigYcoord, smallYcoord
