@@ -23,7 +23,7 @@ type (
 
 	ID string
 
-	ContinuosWallCoord [][2]Point
+	ContinuosWallCoord []Coordinates
 	ContinuosWalls     map[Point]ContinuosWallCoord
 
 	Info struct {
