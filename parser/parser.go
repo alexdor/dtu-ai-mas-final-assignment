@@ -116,7 +116,8 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 	goalCount := 0
 	inGameWalls := []level.Coordinates{}
 	boxGoalAssignment := make([]level.Coordinates, len(state.Boxes))
-	agentBoxAssignment := make(map[byte][]int)
+	agentBoxAssignment := make(level.AgentToBoxesLookup)
+	boxIndexToAgentIndex := make(level.IndexToIndexMapping)
 
 	wg.Wait()
 	state.Boxes = moveableBoxes
@@ -155,14 +156,16 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 
 	wg.Wait()
 
-	assignAgentsToBoxes(levelInfo, state, boxGoalAssignment, agentBoxAssignment)
+	assignAgentsToBoxes(levelInfo, state, boxGoalAssignment, agentBoxAssignment, boxIndexToAgentIndex)
 
 	levelInfo.GoalCount = goalCount
 	levelInfo.InGameWallsCoordinates = inGameWalls
 	levelInfo.BoxGoalAssignment = boxGoalAssignment
 	levelInfo.AgentBoxAssignment = agentBoxAssignment
 	levelInfo.WallRows = wallRows
+	levelInfo.BoxIndexToAgentIndex = boxIndexToAgentIndex
 }
+
 func computeInGameWallsAndWallRows(wg *sync.WaitGroup, levelInfo *level.Info, storeInGameWalls *[]level.Coordinates, wallRows level.ContinuosWalls) {
 	defer wg.Done()
 	var inGameWalls []level.Coordinates
@@ -208,7 +211,7 @@ outer:
 	}
 }
 
-func assignAgentsToBoxes(levelInfo *level.Info, state *level.CurrentState, boxGoalAssignment []level.Coordinates, agentBoxAssignment map[byte][]int) {
+func assignAgentsToBoxes(levelInfo *level.Info, state *level.CurrentState, boxGoalAssignment []level.Coordinates, agentBoxAssignment level.AgentToBoxesLookup, boxIndexToAgentIndex level.IndexToIndexMapping) {
 	if levelInfo.IsSingleAgent {
 		return
 	}
@@ -218,8 +221,8 @@ func assignAgentsToBoxes(levelInfo *level.Info, state *level.CurrentState, boxGo
 		minCost := math.MaxInt64
 
 		var agentWithLowestCost byte
-
-		for _, agent := range state.Agents {
+		var indexOfAgentWithLowestCost int
+		for i, agent := range state.Agents {
 			isBoxMoveableByAgent := levelInfo.AgentColor[agent.Letter] == boxColor
 			if !isBoxMoveableByAgent {
 				continue
@@ -237,10 +240,12 @@ func assignAgentsToBoxes(levelInfo *level.Info, state *level.CurrentState, boxGo
 			if cost < minCost {
 				minCost = cost
 				agentWithLowestCost = agent.Letter
+				indexOfAgentWithLowestCost = i
 			}
 		}
 
 		agentBoxAssignment[agentWithLowestCost] = append(agentBoxAssignment[agentWithLowestCost], boxIndex)
+		boxIndexToAgentIndex[boxIndex] = indexOfAgentWithLowestCost
 	}
 }
 

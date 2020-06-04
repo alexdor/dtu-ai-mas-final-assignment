@@ -14,7 +14,8 @@ type (
 
 	AgentToBoxesLookup map[byte][]int
 
-	NodeOrAgent struct {
+	IndexToIndexMapping map[int]int
+	NodeOrAgent         struct {
 		Letter byte
 		Coordinates
 	}
@@ -38,6 +39,7 @@ type (
 		GoalCoordinates        IntrestingCoordinates
 		BoxGoalAssignment      []Coordinates
 		AgentBoxAssignment     AgentToBoxesLookup
+		BoxIndexToAgentIndex   IndexToIndexMapping
 		IsSingleAgent          bool
 	}
 )
