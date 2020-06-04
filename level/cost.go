@@ -33,7 +33,7 @@ func CalculateAggregatedCost(currentState *CurrentState) int {
 		}
 		goal := goals[goalIndex]
 
-		manHattanCost := ManhattanPlusPlus(box.Coordinates, goal, currentState, &box)
+		manHattanCost := ManhattanPlusPlus(box.Coordinates, goal, currentState, &box, i)
 
 		isManhattanCostZero := manHattanCost == 0
 		if isManhattanCostZero {
@@ -46,15 +46,14 @@ func CalculateAggregatedCost(currentState *CurrentState) int {
 	return aggregatedCost
 }
 
-func ManhattanPlusPlus(first, second Coordinates, state *CurrentState, box *NodeOrAgent) int {
+func ManhattanPlusPlus(first, second Coordinates, state *CurrentState, box *NodeOrAgent, boxIndex int) int {
 	diff := manhattenDistance(first, second)
 	if diff == 0 {
 		return 0
 	}
-
-	diff += calculateAgentsToBoxCost(state, box)
-
 	diff += calculateWallsCost(first, second, state)
+
+	diff += calculateAgentsToBoxCost(state, box, boxIndex)
 
 	return diff
 }
@@ -126,20 +125,42 @@ func abs(x int) int {
 	return x
 }
 
-func calculateAgentsToBoxCost(state *CurrentState, box *NodeOrAgent) int {
+func calculateAgentsToBoxCost(state *CurrentState, box *NodeOrAgent, boxIndex int) int {
 	cost := 0
-	boxColor := state.LevelInfo.BoxColor[box.Letter]
+	agent := state.Agents[0]
+	isAgentAndBoxTogetherLikeBros := false
 
-	for _, agent := range state.Agents {
-		isAgentAndBoxTogetherLikeBros := state.LevelInfo.AgentColor[agent.Letter] == boxColor
-		if !isAgentAndBoxTogetherLikeBros {
-			continue
+	if state.LevelInfo.IsSingleAgent {
+
+		isAgentAndBoxTogetherLikeBros = state.LevelInfo.AgentColor[agent.Letter] == state.LevelInfo.BoxColor[box.Letter]
+
+	} else {
+
+	outer:
+		for agentLetter, boxIndexes := range state.LevelInfo.AgentBoxAssignment {
+			for _, indexOfBox := range boxIndexes {
+				if indexOfBox == boxIndex {
+					for _, stateAgent := range state.Agents {
+						if agentLetter == stateAgent.Letter {
+							agent = stateAgent
+							isAgentAndBoxTogetherLikeBros = true
+							break outer
+						}
+					}
+					break outer
+				}
+			}
+
 		}
-
-		cost += manhattenDistance(box.Coordinates, agent.Coordinates)
-
-		cost += calculateWallsCost(box.Coordinates, agent.Coordinates, state)
 	}
+
+	if !isAgentAndBoxTogetherLikeBros {
+		return 0
+	}
+
+	cost += manhattenDistance(box.Coordinates, agent.Coordinates)
+
+	cost += calculateWallsCost(box.Coordinates, agent.Coordinates, state)
 
 	return cost
 }
