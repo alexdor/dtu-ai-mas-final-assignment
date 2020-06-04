@@ -112,10 +112,19 @@ outer:
 }
 
 func (c *CurrentState) IsBoxAndCanMove(coor Coordinates, agentChar byte) bool {
-	for _, boxIndex := range c.LevelInfo.AgentBoxAssignment[agentChar] {
-		isBoxAtCoor := coor == c.Boxes[boxIndex].Coordinates
-		if isBoxAtCoor {
-			return true
+	isSingleAgent := len(c.Agents) > 1
+	if isSingleAgent {
+		for _, box := range c.Boxes {
+			if box.Coordinates == coor {
+				return c.LevelInfo.AgentColor[agentChar] == c.LevelInfo.BoxColor[box.Letter]
+			}
+		}
+	} else {
+		for _, boxIndex := range c.LevelInfo.AgentBoxAssignment[agentChar] {
+			isBoxAtCoor := coor == c.Boxes[boxIndex].Coordinates
+			if isBoxAtCoor {
+				return true
+			}
 		}
 	}
 
