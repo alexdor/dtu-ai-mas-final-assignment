@@ -84,32 +84,35 @@ func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, current
 		return 0
 	}
 
-	cost := 0
-
-	var isWallXcoordWithinRectangle, isWallYcoordWithinRectangle, isWallCoordWithinRectangle bool
-
-	for _, wallCoordinate := range currentState.LevelInfo.InGameWallsCoordinates {
-
-		isWallXcoordWithinRectangle = wallCoordinate[0] > smallXcoord && wallCoordinate[0] < bigXcoord
-
-		isWallYcoordWithinRectangle = wallCoordinate[1] > smallYcoord && wallCoordinate[1] < bigYcoord
-
-		isWallCoordWithinRectangle = isWallXcoordWithinRectangle && isWallYcoordWithinRectangle
-
-		if !isWallCoordWithinRectangle {
-			if wallCoordinate[0] > bigXcoord {
-				break
-			}
+	for x := smallXcoord; x <= bigXcoord; x++ {
+		wallColumns, ok := currentState.LevelInfo.WallRows[x]
+		if !ok {
 			continue
 		}
+		for _, wallY := range wallColumns {
+			// If the smallest column of the wall is bigger than
+			// the biggest column of the target then break
+			if wallY[0] > bigYcoord {
+				break
+			}
 
-		cost += wallPenaltySize
+			// Wall expands the full length
+			if wallY[0] < smallYcoord && wallY[1] > bigYcoord {
+				return min(smallYcoord-wallY[0], wallY[1]-bigYcoord) + 1
+			}
+
+		}
 	}
 
-	// account for size of area checked
-	cost /= (bigXcoord - smallXcoord) * (bigYcoord - smallYcoord)
+	return 0
+}
 
-	return cost
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+
+	return y
 }
 
 func abs(x int) int {
