@@ -148,6 +148,8 @@ func calculateAgentsToBoxCost(state *CurrentState, box *NodeOrAgent) int {
 		}
 
 		cost += manhattenDistance(box.Coordinates, agent.Coordinates)
+
+		cost += calculateWallsCost(box.Coordinates, agent.Coordinates, state)
 	}
 
 	return cost
