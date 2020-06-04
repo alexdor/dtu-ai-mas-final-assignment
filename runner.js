@@ -74,6 +74,7 @@ function main() {
     let solved = null;
 
     child.stderr.on("data", (data) => {
+      console.log(`${data}`);
       childOutput += `${data}`;
     });
     child.stdout.on("data", (data) => {
@@ -109,6 +110,7 @@ function main() {
             ? "Goal was found after exploring (\\d+) states"
             : "Explored (\\d+) states"
         ),
+        statesGenerated: parseRegexp(childOutput, "Generated (\\d+) states"),
       });
 
       log.clear();
