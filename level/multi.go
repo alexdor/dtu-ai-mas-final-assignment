@@ -103,13 +103,21 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 	return nextStates[:statesCreated+1]
 }
 
-func resolveConflict(currentState *CurrentState, action, newAction agentIntents, agentIndex, newAgentIndex int, intentsFromOtherAgents []agentIntents) []agentIntents {
+func resolveConflict(state *CurrentState, action, newAction agentIntents, agentIndex, newAgentIndex int, intentsFromOtherAgents []agentIntents) []agentIntents {
 	wg.Add(2)
 	replannedStates := make([][]CurrentState, 2)
 	replanedStateActions := make([][]agentIntents, 2)
 
+	currentState := &CurrentState{}
+	state.copy(currentState)
+	updateStateBaseOnMultipleActions(currentState, intentsFromOtherAgents)
 	go replan(currentState, action, agentIndex, newAgentIndex, &replanedStateActions[0], &replannedStates[0])
-	go replan(currentState, newAction, newAgentIndex, agentIndex, &replanedStateActions[1], &replannedStates[1])
+
+	currentStateForNew := &CurrentState{}
+	state.copy(currentStateForNew)
+	updateStateBaseOnMultipleActions(currentStateForNew, append(intentsFromOtherAgents, action))
+	go replan(currentStateForNew, newAction, newAgentIndex, agentIndex, &replanedStateActions[1], &replannedStates[1])
+
 	wg.Wait()
 
 	min := math.MaxInt64
@@ -171,10 +179,8 @@ func updateStateBasedOnAction(newState *CurrentState, intent agentIntents, agent
 
 	newState.Moves = append(newState.Moves, actions.SingleAgentEnd)
 }
-func calcNewState(currentState, newState *CurrentState, currentIntents []agentIntents, nodesInFrontier Visited) {
-	defer cleanupAfterGoroutine()
 
-	currentState.copy(newState)
+func updateStateBaseOnMultipleActions(newState *CurrentState, currentIntents []agentIntents) {
 	for j, action := range currentIntents {
 		newState.Moves = append(newState.Moves, action.action...)
 		if bytes.Equal(action.action, noopIntent.action) {
@@ -186,8 +192,14 @@ func calcNewState(currentState, newState *CurrentState, currentIntents []agentIn
 			newState.Boxes[action.boxIndex].Coordinates = action.boxNewCoor
 		}
 	}
-	newState.Moves = append(newState.Moves, actions.SingleAgentEnd)
+}
 
+func calcNewState(currentState, newState *CurrentState, currentIntents []agentIntents, nodesInFrontier Visited) {
+	defer cleanupAfterGoroutine()
+
+	currentState.copy(newState)
+	updateStateBaseOnMultipleActions(newState, currentIntents)
+	newState.Moves = append(newState.Moves, actions.SingleAgentEnd)
 	calculateCost(newState, nodesInFrontier)
 }
 
