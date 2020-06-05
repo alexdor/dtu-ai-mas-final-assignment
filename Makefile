@@ -11,23 +11,28 @@ ifdef level
         LEVEL=$(level)
 endif
 
-start:
-	@bash -c 'go build -o $(BINARY_NAME) . && java -jar server.jar -l $(LEVEL) -c "./$(BINARY_NAME)" -t 180'
+build:
+	@bash -c 'go build -o $(BINARY_NAME) .'
 
+start: build
+	@bash -c ' java -jar server.jar -l $(LEVEL) -c "./$(BINARY_NAME)" -t 180'
 
 race:
 	@bash -c 'go build -o $(BINARY_NAME) -race . && java -jar server.jar -l $(LEVEL) -c "./$(BINARY_NAME)" -t 30'
 
-start-gui:
-	@bash -c 'go build -o $(BINARY_NAME) . && java -jar server.jar -l $(LEVEL) -c "./$(BINARY_NAME)" -t 180 -g'
+start-gui: build
+	@bash -c 'java -jar server.jar -l $(LEVEL) -c "./$(BINARY_NAME)" -t 180 -g'
 
-start-debug:
-	@bash -c 'go build -o $(BINARY_NAME) . && DEBUG=true java -jar server.jar -l $(LEVEL) -c "./$(BINARY_NAME)" -g'
+start-debug: build
+	@bash -c 'DEBUG=true java -jar server.jar -l $(LEVEL) -c "./$(BINARY_NAME)" -g'
 
-profile:
-	@bash -c 'go build -o $(BINARY_NAME) . && java -jar server.jar -l $(LEVEL) -c "./$(BINARY_NAME) -cpuprofile cpu.prof"'
+profile: build
+	@bash -c 'java -jar server.jar -l $(LEVEL) -c "./$(BINARY_NAME) -cpuprofile cpu.prof"'
 
-debug:
+runner: build
+	@bash -c 'node runner.js -l $(LEVEL) -c "./$(BINARY_NAME)" -t 30 -i SA'
+
+debug: build
 	@bash -c "dlv attach --api-version 2 --headless --listen=:2345 `pgrep $(BINARY_NAME)` ./$(BINARY_NAME)"
 
 .PHONY: help
