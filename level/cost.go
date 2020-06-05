@@ -89,7 +89,12 @@ func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, levelIn
 		return 0
 	}
 
-	return rowOrColWallCalc(smallXcoord, bigXcoord, smallYcoord, bigYcoord, levelInfo.WallRows)
+	return rowOrColWallCalc(
+		smallXcoord, bigXcoord, smallYcoord, bigYcoord, levelInfo.WallRows,
+	) +
+		rowOrColWallCalc(
+			smallYcoord, bigYcoord, smallXcoord, bigXcoord, levelInfo.WallColumns,
+		)
 }
 
 func rowOrColWallCalc(smallXcoord, bigXcoord, smallYcoord, bigYcoord int, walls ContinuosWalls) int {
