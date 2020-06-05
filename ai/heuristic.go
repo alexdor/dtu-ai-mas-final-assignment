@@ -39,6 +39,7 @@ func (a AStart) Solve(levelInfo *level.Info, currentState *level.CurrentState) a
 
 	lenToAllocate := len(levelInfo.WallsCoordinates) / 2
 	NodesVisited = make(level.Visited, lenToAllocate)
+	currentState.CalculateCost()
 	// add the root node to the map of the visited nodes
 	NodesVisited[currentState.GetID()] = struct{}{}
 
