@@ -42,6 +42,7 @@ func CalculateAggregatedCost(currentState *CurrentState) int {
 		}
 		aggregatedCost += manHattanCost
 
+		aggregatedCost += calculateAgentsToBoxCost(currentState, &box, i)
 	}
 
 	return aggregatedCost
@@ -53,8 +54,6 @@ func ManhattanPlusPlus(first, second Coordinates, state *CurrentState, box *Node
 		return 0
 	}
 	diff += calculateWallsCost(first, second, state.LevelInfo)
-
-	diff += calculateAgentsToBoxCost(state, box, boxIndex)
 
 	return diff
 }
