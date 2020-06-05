@@ -2,6 +2,7 @@ package level
 
 import (
 	"bytes"
+	"math"
 
 	"github.com/alexdor/dtu-ai-mas-final-assignment/actions"
 )
@@ -26,8 +27,12 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 
 	// Calculate actions for each agent
 	for agentIndex := range c.Agents {
+		agentIndex := agentIndex
 		goroutineLimiter <- struct{}{}
-		go c.figureOutAgentMovements(agentIndex, &intents[agentIndex])
+		go func() {
+			defer cleanupAfterGoroutine()
+			c.figureOutAgentMovements(agentIndex, &intents[agentIndex])
+		}()
 	}
 
 	hasConflict := false
@@ -71,9 +76,7 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 										action.boxNewCoor == intentToAdd.boxNewCoor)))
 
 						if hasConflict {
-							newIntent := append(intentsFromOtherAgents, intentToAdd)
-							newIntent[i] = noopIntent
-							localIntents = append(localIntents, append(intentsFromOtherAgents, noopIntent), newIntent)
+							localIntents = append(localIntents, resolveConflict(c, action, intentToAdd, i, currentAgentIndex, intentsFromOtherAgents))
 							break
 						}
 					}
@@ -89,19 +92,95 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 
 	nextStates := make([]CurrentState, len(mergedIntents))
 	statesCreated := 0
-	for _, intent := range mergedIntents {
+	var intent []agentIntents
+	for statesCreated, intent = range mergedIntents {
 		waitGoroutineToFreeUp()
 		go calcNewState(c, &nextStates[statesCreated], intent, nodesInFrontier)
-		statesCreated++
 	}
 
 	wg.Wait()
 
-	return nextStates[:statesCreated]
+	return nextStates[:statesCreated+1]
 }
 
+func resolveConflict(currentState *CurrentState, action, newAction agentIntents, agentIndex, newAgentIndex int, intentsFromOtherAgents []agentIntents) []agentIntents {
+	wg.Add(2)
+	replannedStates := make([][]CurrentState, 2)
+	replanedStateActions := make([][]agentIntents, 2)
+
+	go replan(currentState, action, agentIndex, newAgentIndex, &replanedStateActions[0], &replannedStates[0])
+	go replan(currentState, newAction, newAgentIndex, agentIndex, &replanedStateActions[1], &replannedStates[1])
+	wg.Wait()
+
+	min := math.MaxInt64
+	firstKey := 0
+	secondKey := 0
+	for i, states := range replannedStates {
+		for j, state := range states {
+			if state.Cost < min {
+				min = state.Cost
+				firstKey = i
+				secondKey = j
+			}
+		}
+	}
+
+	if firstKey == 0 {
+		return append(intentsFromOtherAgents, replanedStateActions[firstKey][secondKey])
+	}
+
+	intentsFromOtherAgents[agentIndex] = replanedStateActions[firstKey][secondKey]
+	return append(intentsFromOtherAgents, newAction)
+
+}
+
+func replan(currentState *CurrentState, actionToExecute agentIntents, agentIndex, agentToReplanIndex int, intentToUpdate *[]agentIntents, statesToStore *[]CurrentState) {
+	defer wg.Done()
+	simulatedState := generateNewState(currentState, actionToExecute, agentIndex)
+
+	simulatedState.figureOutAgentMovements(agentToReplanIndex, intentToUpdate)
+	newStates := make([]CurrentState, len(*intentToUpdate))
+
+	for i, intent := range *intentToUpdate {
+		newState := &newStates[i]
+		simulatedState.copy(newState)
+
+		newState.Moves = append(newState.Moves, intent.action...)
+		if bytes.Equal(intent.action, noopIntent.action) {
+			continue
+		}
+		newState.Agents[agentToReplanIndex].Coordinates = intent.agentNewCoor
+
+		if intent.boxNewCoor != noopIntent.boxNewCoor {
+			newState.Boxes[intent.boxIndex].Coordinates = intent.boxNewCoor
+		}
+
+		newState.Moves = append(newState.Moves, actions.SingleAgentEnd)
+
+		calculateCost(newState, Visited{})
+	}
+
+	*statesToStore = newStates
+}
+
+func generateNewState(currentState *CurrentState, action agentIntents, agentIndex int) *CurrentState {
+	newState := &CurrentState{}
+	currentState.copy(newState)
+
+	newState.Moves = append(newState.Moves, action.action...)
+	if bytes.Equal(action.action, noopIntent.action) {
+		return newState
+	}
+	newState.Agents[agentIndex].Coordinates = action.agentNewCoor
+
+	if action.boxNewCoor != noopIntent.boxNewCoor {
+		newState.Boxes[action.boxIndex].Coordinates = action.boxNewCoor
+	}
+	return newState
+}
 func calcNewState(currentState, newState *CurrentState, currentIntents []agentIntents, nodesInFrontier Visited) {
 	defer cleanupAfterGoroutine()
+
 	currentState.copy(newState)
 	for j, action := range currentIntents {
 		newState.Moves = append(newState.Moves, action.action...)
@@ -114,15 +193,12 @@ func calcNewState(currentState, newState *CurrentState, currentIntents []agentIn
 			newState.Boxes[action.boxIndex].Coordinates = action.boxNewCoor
 		}
 	}
-
 	newState.Moves = append(newState.Moves, actions.SingleAgentEnd)
 
 	calculateCost(newState, nodesInFrontier)
 }
 
 func (c *CurrentState) figureOutAgentMovements(agentIndex int, intentToUpdate *[]agentIntents) {
-	defer cleanupAfterGoroutine()
-
 	agent := c.Agents[agentIndex]
 
 	if c.LevelInfo.ZeroInGameWalls {
