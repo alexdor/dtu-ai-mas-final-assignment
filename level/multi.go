@@ -64,11 +64,11 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 				if hasConflict {
 					// Check if there is a conflict and handle it
 					for i, action := range intentsFromOtherAgents {
-						hasConflict = !bytes.Equal(action.action, noopIntent.action) && action.agentNewCoor == intentToAdd.agentNewCoor ||
+						hasConflict = !bytes.Equal(action.action, noopIntent.action) && (action.agentNewCoor == intentToAdd.agentNewCoor ||
 							action.boxNewCoor == intentToAdd.agentNewCoor ||
 							(intentToAdd.boxNewCoor != noopIntent.boxNewCoor &&
 								(action.agentNewCoor == intentToAdd.boxNewCoor ||
-									action.boxNewCoor == intentToAdd.boxNewCoor))
+									action.boxNewCoor == intentToAdd.boxNewCoor)))
 
 						if hasConflict {
 							newIntent := append(intentsFromOtherAgents, intentToAdd)
