@@ -141,6 +141,8 @@ func calculateAgentsToBoxCost(state *CurrentState, box *NodeOrAgent, boxIndex in
 		isAgentAndBoxTogetherLikeBros = state.LevelInfo.AgentColor[agent.Letter] == state.LevelInfo.BoxColor[box.Letter]
 	} else {
 		agentIndex, ok := state.LevelInfo.BoxIndexToAgentIndex[boxIndex]
+
+		// Fallback in case agentIndex isn't found
 		if !ok || agentIndex < 0 {
 		outer:
 			for agentLetter, boxIndexes := range state.LevelInfo.AgentBoxAssignment {
@@ -163,8 +165,12 @@ func calculateAgentsToBoxCost(state *CurrentState, box *NodeOrAgent, boxIndex in
 		return 0
 	}
 
-	cost += manhattenDistance(box.Coordinates, agent.Coordinates)
-
+	// If agent is nex to box then the cost is 0
+	manh := manhattenDistance(box.Coordinates, agent.Coordinates) // The agent and the box can never be in the same place
+	if manh == 1 {
+		return 0
+	}
+	cost += manh
 	cost += calculateWallsCost(box.Coordinates, agent.Coordinates, state)
 
 	return cost
