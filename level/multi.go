@@ -144,19 +144,7 @@ func replan(currentState *CurrentState, actionToExecute agentIntents, agentIndex
 	for i, intent := range *intentToUpdate {
 		newState := &newStates[i]
 		simulatedState.copy(newState)
-
-		newState.Moves = append(newState.Moves, intent.action...)
-		if bytes.Equal(intent.action, noopIntent.action) {
-			continue
-		}
-		newState.Agents[agentToReplanIndex].Coordinates = intent.agentNewCoor
-
-		if intent.boxNewCoor != noopIntent.boxNewCoor {
-			newState.Boxes[intent.boxIndex].Coordinates = intent.boxNewCoor
-		}
-
-		newState.Moves = append(newState.Moves, actions.SingleAgentEnd)
-
+		updateStateBasedOnAction(newState, intent, agentToReplanIndex)
 		calculateCost(newState, Visited{})
 	}
 
@@ -166,17 +154,22 @@ func replan(currentState *CurrentState, actionToExecute agentIntents, agentIndex
 func generateNewState(currentState *CurrentState, action agentIntents, agentIndex int) *CurrentState {
 	newState := &CurrentState{}
 	currentState.copy(newState)
-
-	newState.Moves = append(newState.Moves, action.action...)
-	if bytes.Equal(action.action, noopIntent.action) {
-		return newState
-	}
-	newState.Agents[agentIndex].Coordinates = action.agentNewCoor
-
-	if action.boxNewCoor != noopIntent.boxNewCoor {
-		newState.Boxes[action.boxIndex].Coordinates = action.boxNewCoor
-	}
+	updateStateBasedOnAction(newState, action, agentIndex)
 	return newState
+}
+
+func updateStateBasedOnAction(newState *CurrentState, intent agentIntents, agentIndex int) {
+	newState.Moves = append(newState.Moves, intent.action...)
+	if bytes.Equal(intent.action, noopIntent.action) {
+		return
+	}
+	newState.Agents[agentIndex].Coordinates = intent.agentNewCoor
+
+	if intent.boxNewCoor != noopIntent.boxNewCoor {
+		newState.Boxes[intent.boxIndex].Coordinates = intent.boxNewCoor
+	}
+
+	newState.Moves = append(newState.Moves, actions.SingleAgentEnd)
 }
 func calcNewState(currentState, newState *CurrentState, currentIntents []agentIntents, nodesInFrontier Visited) {
 	defer cleanupAfterGoroutine()
