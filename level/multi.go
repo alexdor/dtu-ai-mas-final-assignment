@@ -52,23 +52,23 @@ func ExpandMultiAgent(nodesInFrontier Visited, c *CurrentState) []CurrentState {
 		// tmp list to hold the new merged intents
 		localIntents := [][]agentIntents{}
 
+		// If the current agent doesn't have any actions, add noop action
+		if len(intents[currentAgentIndex]) == 0 {
+			intents[currentAgentIndex] = []agentIntents{noopIntent}
+		}
 		for _, intentsFromOtherAgents := range mergedIntents {
 
-			// If the current agent doesn't have any actions, add noop action
-			if len(intents[currentAgentIndex]) == 0 {
-				intents[currentAgentIndex] = []agentIntents{noopIntent}
-			}
-
 			for _, intentToAdd := range intents[currentAgentIndex] {
-				hasConflict = intentToAdd.agentNewCoor != noopIntent.agentNewCoor
+				hasConflict = !bytes.Equal(intentToAdd.action, noopIntent.action)
 				if hasConflict {
-					// Check if there is a conflict and handle it
 					for i, action := range intentsFromOtherAgents {
-						hasConflict = !bytes.Equal(action.action, noopIntent.action) && (action.agentNewCoor == intentToAdd.agentNewCoor ||
-							action.boxNewCoor == intentToAdd.agentNewCoor ||
-							(intentToAdd.boxNewCoor != noopIntent.boxNewCoor &&
-								(action.agentNewCoor == intentToAdd.boxNewCoor ||
-									action.boxNewCoor == intentToAdd.boxNewCoor)))
+						// Check if there is a conflict and handle it
+						hasConflict = !bytes.Equal(action.action, noopIntent.action) &&
+							(action.agentNewCoor == intentToAdd.agentNewCoor ||
+								action.boxNewCoor == intentToAdd.agentNewCoor ||
+								(intentToAdd.boxNewCoor != noopIntent.boxNewCoor &&
+									(action.agentNewCoor == intentToAdd.boxNewCoor ||
+										action.boxNewCoor == intentToAdd.boxNewCoor)))
 
 						if hasConflict {
 							newIntent := append(intentsFromOtherAgents, intentToAdd)
