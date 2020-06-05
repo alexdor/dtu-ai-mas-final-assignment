@@ -52,7 +52,7 @@ func ManhattanPlusPlus(first, second Coordinates, state *CurrentState, box *Node
 	if diff == 0 {
 		return 0
 	}
-	diff += calculateWallsCost(first, second, state)
+	diff += calculateWallsCost(first, second, state.LevelInfo)
 
 	diff += calculateAgentsToBoxCost(state, box, boxIndex)
 
@@ -63,8 +63,8 @@ func manhattenDistance(first, second Coordinates) int {
 	return abs(first[0]-second[0]) + abs(first[1]-second[1])
 }
 
-func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, currentState *CurrentState) int {
-	if currentState.LevelInfo.ZeroInGameWalls {
+func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, levelInfo *Info) int {
+	if levelInfo.ZeroInGameWalls {
 		return 0
 	}
 	isXcoordOfBoxSmallest := firstCoordinates[0] < secondCoordinates[0]
@@ -90,7 +90,7 @@ func calculateWallsCost(firstCoordinates, secondCoordinates Coordinates, current
 		return 0
 	}
 
-	return rowOrColWallCalc(smallXcoord, bigXcoord, smallYcoord, bigYcoord, currentState.LevelInfo.WallRows)
+	return rowOrColWallCalc(smallXcoord, bigXcoord, smallYcoord, bigYcoord, levelInfo.WallRows)
 }
 
 func rowOrColWallCalc(smallXcoord, bigXcoord, smallYcoord, bigYcoord int, walls ContinuosWalls) int {
@@ -172,7 +172,7 @@ func calculateAgentsToBoxCost(state *CurrentState, box *NodeOrAgent, boxIndex in
 		return 0
 	}
 	cost += manh
-	cost += calculateWallsCost(box.Coordinates, agent.Coordinates, state)
+	cost += calculateWallsCost(box.Coordinates, agent.Coordinates, state.LevelInfo)
 
 	return cost
 }
