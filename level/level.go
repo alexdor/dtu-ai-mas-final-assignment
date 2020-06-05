@@ -29,6 +29,7 @@ type (
 
 	Info struct {
 		WallRows                       ContinuosWalls // key: row, values list of y small and y big sorted based on y small
+		WallColumns                    ContinuosWalls // key: column, values: list of x small and x big sorted based on x small
 		LevelInfo                      map[string]string
 		GoalCount                      int
 		BytesUsedForBoxes              int

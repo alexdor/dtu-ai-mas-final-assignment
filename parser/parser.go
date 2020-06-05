@@ -122,7 +122,9 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 	wg.Add(2)
 
 	wallRows := make(level.ContinuosWalls)
-	go computeInGameWallsAndWallRows(wg, levelInfo, &inGameWalls, wallRows)
+	wallCol := make(level.ContinuosWalls)
+
+	go computeInGameWallsAndWallRows(wg, levelInfo, &inGameWalls, wallRows, wallCol)
 
 	go func() {
 		defer wg.Done()
@@ -165,10 +167,11 @@ func preprocessLvl(levelInfo *level.Info, state *level.CurrentState) {
 	levelInfo.BoxGoalAssignment = boxGoalAssignment
 	levelInfo.AgentBoxAssignment = agentBoxAssignment
 	levelInfo.WallRows = wallRows
+	levelInfo.WallColumns = wallCol
 	levelInfo.BoxIndexToAgentIndex = boxIndexToAgentIndex
 }
 
-func computeInGameWallsAndWallRows(wg *sync.WaitGroup, levelInfo *level.Info, storeInGameWalls *[]level.Coordinates, wallRows level.ContinuosWalls) {
+func computeInGameWallsAndWallRows(wg *sync.WaitGroup, levelInfo *level.Info, storeInGameWalls *[]level.Coordinates, wallRows, wallCol level.ContinuosWalls) {
 	defer wg.Done()
 	var inGameWalls []level.Coordinates
 
@@ -183,32 +186,33 @@ func computeInGameWallsAndWallRows(wg *sync.WaitGroup, levelInfo *level.Info, st
 	sort.Slice(inGameWalls, func(i, j int) bool {
 		return inGameWalls[i][0] < inGameWalls[j][0] || (inGameWalls[i][0] == inGameWalls[j][0] && inGameWalls[i][1] < inGameWalls[j][1])
 	})
-	figureOutWallRows(inGameWalls, wallRows)
+	figureOutWallRows(inGameWalls, wallRows, 0, 1)
+	figureOutWallRows(inGameWalls, wallCol, 1, 0)
 
 	*storeInGameWalls = inGameWalls
 }
 
-func figureOutWallRows(inGameWalls []level.Coordinates, wallRows level.ContinuosWalls) {
+func figureOutWallRows(inGameWalls []level.Coordinates, wallRows level.ContinuosWalls, indexForKeys, indexForValues int) {
 outer:
 	for _, wall := range inGameWalls {
-		rowToAppend, ok := wallRows[wall[0]]
+		rowToAppend, ok := wallRows[wall[indexForKeys]]
 		// Create new key value pair if it doesn't exits
 		if !ok {
-			wallRows[wall[0]] = level.ContinuosWallCoord{{wall[1], wall[1]}}
+			wallRows[wall[indexForKeys]] = level.ContinuosWallCoord{{wall[indexForValues], wall[indexForValues]}}
 			continue
 		}
 
 		for i := range rowToAppend {
 			// If the current wall is part of the previous box
 			// increase tha "max" var of the wall by one
-			if wall[1]-1 == rowToAppend[i][1] {
-				wallRows[wall[0]][i][1] = rowToAppend[i][1] + 1
+			if wall[indexForValues]-1 == rowToAppend[i][indexForValues] {
+				wallRows[wall[indexForKeys]][i][indexForValues] = rowToAppend[i][indexForValues] + 1
 				continue outer
 			}
 		}
 
 		// If the walls isn't connected to previous walls then create a new set
-		wallRows[wall[0]] = append(rowToAppend, [2]level.Point{wall[1], wall[1]})
+		wallRows[wall[indexForKeys]] = append(rowToAppend, [2]level.Point{wall[indexForValues], wall[indexForValues]})
 
 	}
 }
