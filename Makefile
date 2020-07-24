@@ -30,7 +30,7 @@ profile: build
 	@bash -c 'java -jar server.jar -l $(LEVEL) -c "./$(BINARY_NAME) -cpuprofile cpu.prof"'
 
 runner: build
-	@bash -c 'node runner.js -l $(LEVEL) -c "./$(BINARY_NAME)" -t 30 -i SA'
+	@bash -c 'node runner.js -l $(LEVEL) -c "./$(BINARY_NAME)" -t 180 -i SA'
 
 debug: build
 	@bash -c "dlv attach --api-version 2 --headless --listen=:2345 `pgrep $(BINARY_NAME)` ./$(BINARY_NAME)"
